@@ -31,7 +31,9 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
 
     let gen = quote! {
         impl Args for #name {
-            fn parse_from<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
+            fn parse_from<I: std::iter::Iterator<Item = std::string::String>>(
+                mut args: I
+            ) -> entrance::Result<Self> {
                 args.next(); // Drop the first element;
                 #body
             }

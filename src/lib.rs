@@ -1,7 +1,7 @@
 pub use entrance_derive::Args;
 
 type Error = Box<dyn std::error::Error>;
-type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 pub trait Args: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
@@ -29,25 +29,6 @@ mod tests {
                     arg3: args.next().unwrap().parse()?,
                 })
             }
-        }
-
-        let args = ["sample", "arg1", "123", "path/to/file"];
-        let result = Arguments::parse_from(args.iter().map(|s| s.to_string()))?;
-
-        assert_eq!(result.arg1, "arg1".to_string());
-        assert_eq!(result.arg2, 123);
-        assert_eq!(result.arg3, "path/to/file".parse::<PathBuf>().unwrap());
-
-        Ok(())
-    }
-
-    #[test]
-    fn derive_macro() -> Result<()> {
-        #[derive(Args)]
-        struct Arguments {
-            arg1: String,
-            arg2: i32,
-            arg3: PathBuf,
         }
 
         let args = ["sample", "arg1", "123", "path/to/file"];
