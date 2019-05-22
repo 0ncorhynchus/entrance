@@ -1,0 +1,8 @@
+[package]
+name = "entrance"
+version = "0.1.0"
+authors = ["Suguru Kato <salmon.bioinformatics@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+entrance_derive = { path = "./entrance_derive" }
