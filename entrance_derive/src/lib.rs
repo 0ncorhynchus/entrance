@@ -22,7 +22,12 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
             let named = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
             quote! {
                 Ok(Self {
-                    #( #named: args.next().unwrap().parse()?, )*
+                    #(
+                        #named:
+                            args.next()
+                                .ok_or(entrance::Error::InvalidNumberOfArguments)?
+                                .parse()?,
+                    )*
                 })
             }
         }

@@ -1,7 +1,29 @@
+use std::error;
+use std::fmt;
 pub use entrance_derive::Args;
 
-type Error = Box<dyn std::error::Error>;
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
+#[derive(Debug)]
+pub enum Error {
+    InvalidNumberOfArguments,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::InvalidNumberOfArguments => write!(f, "Invalid number of arguments")
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            Error::InvalidNumberOfArguments => "Invalid number of arguments"
+        }
+    }
+}
 
 pub trait Args: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
