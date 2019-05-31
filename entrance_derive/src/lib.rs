@@ -34,12 +34,32 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
         _ => panic!("Not supported for any Struct without named fields"),
     };
 
+    let args_body = match fields {
+        syn::Fields::Named(fields) => {
+            let named = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
+            let num_variables = fields.named.len();
+            quote! {
+                const ARGS: [entrance::Arg; #num_variables] = [
+                    #(
+                        entrance::Arg::new(stringify!(#named), ""),
+                    )*
+                ];
+                &ARGS
+            }
+        }
+        _ => panic!("Not supported for any Struct without named fields"),
+    };
+
     let gen = quote! {
         impl Args for #name {
             fn parse_from<I: std::iter::Iterator<Item = std::string::String>>(
                 mut args: I
             ) -> entrance::Result<Self> {
                 #body
+            }
+
+            fn args() -> &'static [entrance::Arg] {
+                #args_body
             }
         }
     };

@@ -47,6 +47,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Arg;
     use std::path::PathBuf;
 
     struct Arguments {
@@ -62,6 +63,15 @@ mod tests {
                 arg2: args.next().unwrap().parse()?,
                 arg3: args.next().unwrap().parse()?,
             })
+        }
+
+        fn args() -> &'static [Arg] {
+            const ARGS: [Arg; 3] = [
+                Arg::new("arg1", ""),
+                Arg::new("arg2", ""),
+                Arg::new("arg3", ""),
+            ];
+            &ARGS
         }
     }
 

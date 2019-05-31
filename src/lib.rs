@@ -30,6 +30,19 @@ impl error::Error for Error {
 
 pub trait Args: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
+    fn args() -> &'static [Arg];
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Arg {
+    pub name: &'static str,
+    pub description: &'static str,
+}
+
+impl Arg {
+    pub const fn new(name: &'static str, description: &'static str) -> Self {
+        Self { name, description }
+    }
 }
 
 #[cfg(test)]
@@ -50,6 +63,15 @@ mod tests {
                 arg2: args.next().unwrap().parse()?,
                 arg3: args.next().unwrap().parse()?,
             })
+        }
+
+        fn args() -> &'static [Arg] {
+            const ARGS: [Arg; 3] = [
+                Arg::new("arg1", ""),
+                Arg::new("arg2", ""),
+                Arg::new("arg3", ""),
+            ];
+            &ARGS
         }
     }
 
