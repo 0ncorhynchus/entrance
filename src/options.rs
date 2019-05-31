@@ -1,6 +1,6 @@
-use std::iter::Peekable;
 use std::error;
 use std::fmt;
+use std::iter::Peekable;
 
 type Result<T> = std::result::Result<T, Error>;
 
@@ -13,12 +13,8 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::InvalidShortOption(flag) => {
-                write!(f, "Invalid option: -{}", flag)
-            }
-            Error::InvalidLongOption(flag) => {
-                write!(f, "Invalid option: --{}", flag)
-            }
+            Error::InvalidShortOption(flag) => write!(f, "Invalid option: -{}", flag),
+            Error::InvalidLongOption(flag) => write!(f, "Invalid option: --{}", flag),
         }
     }
 }
@@ -26,7 +22,7 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn description(&self) -> &str {
         match self {
-            Error::InvalidShortOption(_) | Error::InvalidLongOption(_) => "Invalid option"
+            Error::InvalidShortOption(_) | Error::InvalidLongOption(_) => "Invalid option",
         }
     }
 }
@@ -79,7 +75,11 @@ mod tests {
                 args.next(); // Consume an element
             }
 
-            Ok(Self { flag1, flag2, flag3 })
+            Ok(Self {
+                flag1,
+                flag2,
+                flag3,
+            })
         }
     }
 
