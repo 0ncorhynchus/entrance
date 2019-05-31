@@ -55,7 +55,8 @@ impl<A> CommandPrecursor<Command<A>>
 where
     A: Args,
 {
-    pub fn parse_args<I: Iterator<Item = String>>(self, args: I) -> Result<Command<A>> {
+    pub fn parse_args<I: Iterator<Item = String>>(self, mut args: I) -> Result<Command<A>> {
+        let _program_name = args.next();
         Ok(Command {
             name: self.name,
             args: A::parse_from(args)?,
@@ -76,7 +77,6 @@ mod tests {
 
     impl Args for Arguments {
         fn parse_from<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
-            args.next();
             Ok(Self {
                 arg1: args.next().unwrap().parse()?,
                 arg2: args.next().unwrap().parse()?,
@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn parse_from() -> Result<()> {
-        let args = ["sample", "arg1", "123", "path/to/file"];
+        let args = ["arg1", "123", "path/to/file"];
         let result = Arguments::parse_from(args.iter().map(|s| s.to_string()))?;
 
         assert_eq!(result.arg1, "arg1".to_string());
@@ -105,7 +105,10 @@ mod tests {
 
         assert_eq!(command.args.arg1, "arg1".to_string());
         assert_eq!(command.args.arg2, 123);
-        assert_eq!(command.args.arg3, "path/to/file".parse::<PathBuf>().unwrap());
+        assert_eq!(
+            command.args.arg3,
+            "path/to/file".parse::<PathBuf>().unwrap()
+        );
 
         Ok(())
     }

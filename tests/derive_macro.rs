@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use entrance::Args;
+use std::path::PathBuf;
 
 #[test]
 fn struct_with_named_fields() -> entrance::Result<()> {
@@ -10,7 +10,7 @@ fn struct_with_named_fields() -> entrance::Result<()> {
         arg3: PathBuf,
     }
 
-    let args = ["sample", "arg1", "123", "path/to/file"];
+    let args = ["arg1", "123", "path/to/file"];
     let result = Arguments::parse_from(args.iter().map(|s| s.to_string()))?;
 
     assert_eq!(result.arg1, "arg1".to_string());

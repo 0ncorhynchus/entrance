@@ -39,7 +39,6 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
             fn parse_from<I: std::iter::Iterator<Item = std::string::String>>(
                 mut args: I
             ) -> entrance::Result<Self> {
-                args.next(); // Drop the first element;
                 #body
             }
         }
