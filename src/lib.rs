@@ -1,7 +1,9 @@
+mod command;
+
+pub use crate::command::*;
 pub use entrance_derive::Args;
 use std::error;
 use std::fmt;
-use std::marker::PhantomData;
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -28,48 +30,6 @@ impl error::Error for Error {
 
 pub trait Args: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
-}
-
-#[derive(Debug)]
-pub struct Command<Arguments> {
-    name: String,
-    args: Arguments,
-}
-
-impl<A> Command<A> {
-    pub fn new(name: &str) -> CommandPrecursor<Self> {
-        CommandPrecursor {
-            name: name.to_string(),
-            _phantom: PhantomData,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn args(&self) -> &A {
-        &self.args
-    }
-}
-
-#[derive(Debug)]
-pub struct CommandPrecursor<Command> {
-    name: String,
-    _phantom: PhantomData<Command>,
-}
-
-impl<A> CommandPrecursor<Command<A>>
-where
-    A: Args,
-{
-    pub fn parse_args<I: Iterator<Item = String>>(self, mut args: I) -> Result<Command<A>> {
-        let _program_name = args.next();
-        Ok(Command {
-            name: self.name,
-            args: A::parse_from(args)?,
-        })
-    }
 }
 
 #[cfg(test)]
@@ -101,22 +61,6 @@ mod tests {
         assert_eq!(result.arg1, "arg1".to_string());
         assert_eq!(result.arg2, 123);
         assert_eq!(result.arg3, "path/to/file".parse::<PathBuf>().unwrap());
-
-        Ok(())
-    }
-
-    #[test]
-    fn command() -> Result<()> {
-        let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<Arguments> =
-            Command::new("sample").parse_args(args.into_iter().map(|s| s.to_string()))?;
-
-        assert_eq!(command.args().arg1, "arg1".to_string());
-        assert_eq!(command.args().arg2, 123);
-        assert_eq!(
-            command.args().arg3,
-            "path/to/file".parse::<PathBuf>().unwrap()
-        );
 
         Ok(())
     }
