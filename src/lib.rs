@@ -43,6 +43,14 @@ impl<A> Command<A> {
             _phantom: PhantomData,
         }
     }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn args(&self) -> &A {
+        &self.args
+    }
 }
 
 #[derive(Debug)]
@@ -103,10 +111,10 @@ mod tests {
         let command: Command<Arguments> =
             Command::new("sample").parse_args(args.into_iter().map(|s| s.to_string()))?;
 
-        assert_eq!(command.args.arg1, "arg1".to_string());
-        assert_eq!(command.args.arg2, 123);
+        assert_eq!(command.args().arg1, "arg1".to_string());
+        assert_eq!(command.args().arg2, 123);
         assert_eq!(
-            command.args.arg3,
+            command.args().arg3,
             "path/to/file".parse::<PathBuf>().unwrap()
         );
 
