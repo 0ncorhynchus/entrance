@@ -23,6 +23,10 @@ impl<A> Command<A> {
     pub fn args(&self) -> &A {
         &self.args
     }
+
+    pub fn help(&self) -> HelpDisplay<A> {
+        HelpDisplay::new(&self.name)
+    }
 }
 
 #[derive(Debug)]
@@ -41,6 +45,49 @@ where
             name: self.name,
             args: A::parse_from(args)?,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct HelpDisplay<'a, A>(&'a str, PhantomData<A>);
+
+impl<'a, A> HelpDisplay<'a, A> {
+    fn new(name: &'a str) -> Self {
+        Self(name, PhantomData)
+    }
+}
+
+impl<'a, A> std::fmt::Display for HelpDisplay<'a, A>
+where
+    A: Args,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        const SPACER: &'static str = "    ";
+
+        writeln!(f, "USAGE:")?;
+        write!(f, "{indent}{}", self.0, indent = SPACER)?;
+        for arg in A::args() {
+            write!(f, " <{}>", arg.name)?;
+        }
+        writeln!(f, "")?;
+
+        writeln!(f, "")?;
+
+        if let Some(longest_length) = A::args().iter().map(|arg| arg.name.len()).max() {
+            writeln!(f, "ARGS:")?;
+            for arg in A::args() {
+                writeln!(
+                    f,
+                    "{spacer}{:<width$}{spacer}{}",
+                    arg.name,
+                    arg.description,
+                    spacer = SPACER,
+                    width = longest_length
+                )?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -67,9 +114,9 @@ mod tests {
 
         fn args() -> &'static [Arg] {
             const ARGS: [Arg; 3] = [
-                Arg::new("arg1", ""),
-                Arg::new("arg2", ""),
-                Arg::new("arg3", ""),
+                Arg::new("arg1", "This is parsed as String"),
+                Arg::new("arg2", "This is parsed as i32"),
+                Arg::new("arg3", "This is parsed as PathBuf"),
             ];
             &ARGS
         }
@@ -89,5 +136,23 @@ mod tests {
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn format_usage() {
+        let usage = HelpDisplay::<Arguments>::new("sample");
+        assert_eq!(
+            usage.to_string(),
+            "\
+USAGE:
+    sample <arg1> <arg2> <arg3>
+
+ARGS:
+    arg1    This is parsed as String
+    arg2    This is parsed as i32
+    arg3    This is parsed as PathBuf
+"
+            .to_string()
+        );
     }
 }
