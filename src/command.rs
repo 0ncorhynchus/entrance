@@ -9,7 +9,7 @@ pub struct Command<Opts, Arguments> {
     args: Arguments,
 }
 
-impl<O, A> Command<O, A> {
+impl<Opts, Args> Command<Opts, Args> {
     pub fn new(name: &str) -> CommandPrecursor<Self> {
         CommandPrecursor {
             name: name.to_string(),
@@ -21,15 +21,15 @@ impl<O, A> Command<O, A> {
         &self.name
     }
 
-    pub fn options(&self) -> &O {
+    pub fn options(&self) -> &Opts {
         &self.options
     }
 
-    pub fn args(&self) -> &A {
+    pub fn args(&self) -> &Args {
         &self.args
     }
 
-    pub fn help(&self) -> HelpDisplay<O, A> {
+    pub fn help(&self) -> HelpDisplay<Opts, Args> {
         HelpDisplay::new(&self.name)
     }
 }
@@ -40,55 +40,55 @@ pub struct CommandPrecursor<Command> {
     _phantom: PhantomData<Command>,
 }
 
-impl<O, A> CommandPrecursor<Command<O, A>>
+impl<Opts, Args> CommandPrecursor<Command<Opts, Args>>
 where
-    O: Options,
-    A: Arguments,
+    Opts: Options,
+    Args: Arguments,
 {
-    pub fn parse_args<I: Iterator<Item = String>>(self, args: I) -> Result<Command<O, A>> {
+    pub fn parse_args<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args>> {
         let mut args = args.peekable();
         let _program_name = args.next();
         Ok(Command {
             name: self.name,
-            options: O::consume(&mut args)?,
-            args: A::parse_from(args)?,
+            options: Opts::consume(&mut args)?,
+            args: Args::parse_from(args)?,
         })
     }
 }
 
 #[derive(Debug)]
-pub struct HelpDisplay<'a, O, A>(&'a str, PhantomData<O>, PhantomData<A>);
+pub struct HelpDisplay<'a, Opts, Args>(&'a str, PhantomData<Opts>, PhantomData<Args>);
 
-impl<'a, O, A> HelpDisplay<'a, O, A> {
+impl<'a, Opts, Args> HelpDisplay<'a, Opts, Args> {
     fn new(name: &'a str) -> Self {
         Self(name, PhantomData, PhantomData)
     }
 }
 
-impl<'a, O, A> std::fmt::Display for HelpDisplay<'a, O, A>
+impl<'a, Opts, Args> std::fmt::Display for HelpDisplay<'a, Opts, Args>
 where
-    O: Options,
-    A: Arguments,
+    Opts: Options,
+    Args: Arguments,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         const SPACER: &'static str = "    ";
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0, indent = SPACER)?;
-        if !O::spec().is_empty() {
+        if !Opts::spec().is_empty() {
             write!(f, " [OPTIONS]")?;
         }
-        for arg in A::spec() {
+        for arg in Args::spec() {
             write!(f, " <{}>", arg.name)?;
         }
         writeln!(f, "")?;
 
-        format_options(f, SPACER, O::spec())?;
+        format_options(f, SPACER, Opts::spec())?;
 
-        if let Some(longest_length) = A::spec().iter().map(|arg| arg.name.len()).max() {
+        if let Some(longest_length) = Args::spec().iter().map(|arg| arg.name.len()).max() {
             writeln!(f, "")?;
             writeln!(f, "ARGS:")?;
-            for arg in A::spec() {
+            for arg in Args::spec() {
                 writeln!(
                     f,
                     "{spacer}{:<width$}{spacer}{}",
