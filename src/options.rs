@@ -22,7 +22,9 @@ impl fmt::Display for OptionError {
 impl error::Error for OptionError {
     fn description(&self) -> &str {
         match self {
-            OptionError::InvalidShortOption(_) | OptionError::InvalidLongOption(_) => "Invalid option",
+            OptionError::InvalidShortOption(_) | OptionError::InvalidLongOption(_) => {
+                "Invalid option"
+            }
         }
     }
 }
@@ -139,7 +141,10 @@ mod tests {
         let args = ["--flag1", "-2", "--unknown", "arg1", "arg2"];
         let mut peekable = args.iter().map(|s| s.to_string()).peekable();
         let ops = Opts::consume(&mut peekable);
-        assert_eq!(ops, Err(OptionError::InvalidLongOption("unknown".to_string())));
+        assert_eq!(
+            ops,
+            Err(OptionError::InvalidLongOption("unknown".to_string()))
+        );
         assert_eq!(peekable.next(), Some("--unknown".to_string()));
     }
 
