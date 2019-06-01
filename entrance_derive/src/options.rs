@@ -1,6 +1,5 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn;
 
 pub fn impl_options(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
