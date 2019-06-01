@@ -28,6 +28,16 @@ pub trait Arguments: Sized {
     fn spec() -> &'static [Arg];
 }
 
+impl Arguments for () {
+    fn parse_from<I: Iterator<Item = String>>(_args: I) -> Result<Self> {
+        Ok(())
+    }
+
+    fn spec() -> &'static [Arg] {
+        &[]
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Arg {
     pub name: &'static str,
