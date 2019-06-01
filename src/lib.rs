@@ -30,7 +30,7 @@ impl error::Error for ArgumentError {
     }
 }
 
-pub trait Args: Sized {
+pub trait Arguments: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
     fn args() -> &'static [Arg];
 }
@@ -52,13 +52,13 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    struct Arguments {
+    struct Args {
         arg1: String,
         arg2: i32,
         arg3: PathBuf,
     }
 
-    impl Args for Arguments {
+    impl Arguments for Args {
         fn parse_from<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
             Ok(Self {
                 arg1: args.next().unwrap().parse()?,
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn parse_from() -> Result<()> {
         let args = ["arg1", "123", "path/to/file"];
-        let result = Arguments::parse_from(args.iter().map(|s| s.to_string()))?;
+        let result = Args::parse_from(args.iter().map(|s| s.to_string()))?;
 
         assert_eq!(result.arg1, "arg1".to_string());
         assert_eq!(result.arg2, 123);

@@ -6,7 +6,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn;
 
-#[proc_macro_derive(Args)]
+#[proc_macro_derive(Arguments)]
 pub fn args_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_args(&ast)
@@ -53,7 +53,7 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let gen = quote! {
-        impl Args for #name {
+        impl Arguments for #name {
             fn parse_from<I: std::iter::Iterator<Item = std::string::String>>(
                 mut args: I
             ) -> entrance::Result<Self> {

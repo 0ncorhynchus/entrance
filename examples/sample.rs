@@ -1,8 +1,8 @@
-use entrance::{Args, Command, Options};
+use entrance::{Arguments, Command, Options};
 use std::env;
 
-#[derive(Args)]
-struct Arguments {
+#[derive(Arguments)]
+struct Args {
     integer: i32,
     float: f64,
     string: String,
@@ -16,7 +16,7 @@ struct Opts {
 }
 
 fn main() {
-    let command: Command<Opts, Arguments> = match Command::new("sample").parse_args(env::args()) {
+    let command: Command<Opts, Args> = match Command::new("sample").parse_args(env::args()) {
         Ok(args) => args,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);

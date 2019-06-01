@@ -1,5 +1,5 @@
 use crate::Result;
-use crate::{Args, Options};
+use crate::{Arguments, Options};
 use std::marker::PhantomData;
 
 #[derive(Debug)]
@@ -43,7 +43,7 @@ pub struct CommandPrecursor<Command> {
 impl<O, A> CommandPrecursor<Command<O, A>>
 where
     O: Options,
-    A: Args,
+    A: Arguments,
 {
     pub fn parse_args<I: Iterator<Item = String>>(self, args: I) -> Result<Command<O, A>> {
         let mut args = args.peekable();
@@ -68,7 +68,7 @@ impl<'a, O, A> HelpDisplay<'a, O, A> {
 impl<'a, O, A> std::fmt::Display for HelpDisplay<'a, O, A>
 where
     O: Options,
-    A: Args,
+    A: Arguments,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         const SPACER: &'static str = "    ";
@@ -149,13 +149,13 @@ mod tests {
     use crate::Arg;
     use std::path::PathBuf;
 
-    struct Arguments {
+    struct Args {
         arg1: String,
         arg2: i32,
         arg3: PathBuf,
     }
 
-    impl Args for Arguments {
+    impl Arguments for Args {
         fn parse_from<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
             Ok(Self {
                 arg1: args.next().unwrap().parse()?,
@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<(), Arguments> =
+        let command: Command<(), Args> =
             Command::new("sample").parse_args(args.into_iter().map(|s| s.to_string()))?;
 
         assert_eq!(command.args().arg1, "arg1".to_string());
@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn format_usage() {
-        let usage = HelpDisplay::<(), Arguments>::new("sample");
+        let usage = HelpDisplay::<(), Args>::new("sample");
         assert_eq!(
             usage.to_string(),
             "\
