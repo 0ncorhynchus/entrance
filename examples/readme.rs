@@ -8,8 +8,9 @@ struct Opts {
 }
 
 fn main() {
-    let command: Command<Opts, ()> =
-        Command::new(env!("CARGO_PKG_NAME")).parse_args(args()).unwrap();
+    let command: Command<Opts, ()> = Command::new(env!("CARGO_PKG_NAME"))
+        .parse_args(args())
+        .unwrap();
 
     if command.options().help {
         println!("{}", command.help());
