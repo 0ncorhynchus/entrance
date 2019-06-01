@@ -21,7 +21,7 @@ fn struct_with_named_fields() -> entrance::Result<()> {
 }
 
 #[test]
-fn options() -> Result<(), entrance::options::Error> {
+fn options() -> Result<(), entrance::OptionError> {
     #[derive(Options, Debug, PartialEq)]
     struct Opts {
         verbose: bool,
@@ -43,7 +43,7 @@ fn options() -> Result<(), entrance::options::Error> {
     let opts = Opts::consume(&mut peekable);
     assert_eq!(
         opts,
-        Err(entrance::options::Error::InvalidLongOption(
+        Err(entrance::OptionError::InvalidLongOption(
             "invalid".to_string()
         ))
     );

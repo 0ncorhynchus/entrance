@@ -1,5 +1,5 @@
 mod command;
-pub mod options;
+mod options;
 
 pub use crate::command::*;
 pub use crate::options::*;
@@ -10,22 +10,22 @@ use std::fmt;
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 #[derive(Debug)]
-pub enum Error {
+pub enum ArgumentError {
     InvalidNumberOfArguments,
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for ArgumentError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::InvalidNumberOfArguments => write!(f, "Invalid number of arguments"),
+            ArgumentError::InvalidNumberOfArguments => write!(f, "Invalid number of arguments"),
         }
     }
 }
 
-impl error::Error for Error {
+impl error::Error for ArgumentError {
     fn description(&self) -> &str {
         match self {
-            Error::InvalidNumberOfArguments => "Invalid number of arguments",
+            ArgumentError::InvalidNumberOfArguments => "Invalid number of arguments",
         }
     }
 }

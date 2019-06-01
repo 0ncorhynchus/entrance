@@ -43,7 +43,7 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
                     #option_arms
                 )*
                 flag => {
-                    return Err(entrance::options::Error::InvalidLongOption(
+                    return Err(entrance::OptionError::InvalidLongOption(
                         flag.to_string(),
                     ));
                 }
@@ -57,7 +57,7 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
     let consume_impl = quote! {
         fn consume<I: std::iter::Iterator<Item = std::string::String>>(
             args: &mut std::iter::Peekable<I>,
-        ) -> std::result::Result<Self, entrance::options::Error> {
+        ) -> std::result::Result<Self, entrance::OptionError> {
             #declare_lines
 
             while let Some(arg) = args.peek() {

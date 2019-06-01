@@ -27,7 +27,7 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
                     #(
                         #named:
                             args.next()
-                                .ok_or(entrance::Error::InvalidNumberOfArguments)?
+                                .ok_or(entrance::ArgumentError::InvalidNumberOfArguments)?
                                 .parse()?,
                     )*
                 })

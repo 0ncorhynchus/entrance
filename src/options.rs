@@ -2,27 +2,27 @@ use std::error;
 use std::fmt;
 use std::iter::Peekable;
 
-type Result<T> = std::result::Result<T, Error>;
+type Result<T> = std::result::Result<T, OptionError>;
 
 #[derive(Debug, PartialEq)]
-pub enum Error {
+pub enum OptionError {
     InvalidShortOption(char),
     InvalidLongOption(String),
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for OptionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::InvalidShortOption(flag) => write!(f, "Invalid option: -{}", flag),
-            Error::InvalidLongOption(flag) => write!(f, "Invalid option: --{}", flag),
+            OptionError::InvalidShortOption(flag) => write!(f, "Invalid option: -{}", flag),
+            OptionError::InvalidLongOption(flag) => write!(f, "Invalid option: --{}", flag),
         }
     }
 }
 
-impl error::Error for Error {
+impl error::Error for OptionError {
     fn description(&self) -> &str {
         match self {
-            Error::InvalidShortOption(_) | Error::InvalidLongOption(_) => "Invalid option",
+            OptionError::InvalidShortOption(_) | OptionError::InvalidLongOption(_) => "Invalid option",
         }
     }
 }
@@ -73,7 +73,7 @@ mod tests {
                         "flag2" => flag2 = true,
                         "flag3" => flag3 = true,
                         flag => {
-                            return Err(Error::InvalidLongOption(flag.to_string()));
+                            return Err(OptionError::InvalidLongOption(flag.to_string()));
                         }
                     }
                 } else if arg.starts_with("-") {
@@ -83,7 +83,7 @@ mod tests {
                             '2' => flag2 = true,
                             '3' => flag3 = true,
                             flag => {
-                                return Err(Error::InvalidShortOption(flag));
+                                return Err(OptionError::InvalidShortOption(flag));
                             }
                         }
                     }
@@ -139,7 +139,7 @@ mod tests {
         let args = ["--flag1", "-2", "--unknown", "arg1", "arg2"];
         let mut peekable = args.iter().map(|s| s.to_string()).peekable();
         let ops = Opts::consume(&mut peekable);
-        assert_eq!(ops, Err(Error::InvalidLongOption("unknown".to_string())));
+        assert_eq!(ops, Err(OptionError::InvalidLongOption("unknown".to_string())));
         assert_eq!(peekable.next(), Some("--unknown".to_string()));
     }
 
@@ -148,7 +148,7 @@ mod tests {
         let args = ["--flag1", "-2", "-x", "arg1", "arg2"];
         let mut peekable = args.iter().map(|s| s.to_string()).peekable();
         let ops = Opts::consume(&mut peekable);
-        assert_eq!(ops, Err(Error::InvalidShortOption('x')));
+        assert_eq!(ops, Err(OptionError::InvalidShortOption('x')));
         assert_eq!(peekable.next(), Some("-x".to_string()));
     }
 }
