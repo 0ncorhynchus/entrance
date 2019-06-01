@@ -1,9 +1,9 @@
 mod command;
-mod options;
+pub mod options;
 
 pub use crate::command::*;
 pub use crate::options::*;
-pub use entrance_derive::Args;
+pub use entrance_derive::*;
 use std::error;
 use std::fmt;
 

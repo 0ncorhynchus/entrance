@@ -1,5 +1,7 @@
 extern crate proc_macro;
 
+mod options;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn;
@@ -64,4 +66,10 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
         }
     };
     gen.into()
+}
+
+#[proc_macro_derive(Options)]
+pub fn optionss_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    options::impl_options(&ast)
 }
