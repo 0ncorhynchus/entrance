@@ -75,20 +75,20 @@ where
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0, indent = SPACER)?;
-        if !O::opts().is_empty() {
+        if !O::spec().is_empty() {
             write!(f, " [OPTIONS]")?;
         }
-        for arg in A::args() {
+        for arg in A::spec() {
             write!(f, " <{}>", arg.name)?;
         }
         writeln!(f, "")?;
 
-        format_options(f, SPACER, O::opts())?;
+        format_options(f, SPACER, O::spec())?;
 
-        if let Some(longest_length) = A::args().iter().map(|arg| arg.name.len()).max() {
+        if let Some(longest_length) = A::spec().iter().map(|arg| arg.name.len()).max() {
             writeln!(f, "")?;
             writeln!(f, "ARGS:")?;
-            for arg in A::args() {
+            for arg in A::spec() {
                 writeln!(
                     f,
                     "{spacer}{:<width$}{spacer}{}",
@@ -164,7 +164,7 @@ mod tests {
             })
         }
 
-        fn args() -> &'static [Arg] {
+        fn spec() -> &'static [Arg] {
             const ARGS: [Arg; 3] = [
                 Arg::new("arg1", "This is parsed as String"),
                 Arg::new("arg2", "This is parsed as i32"),

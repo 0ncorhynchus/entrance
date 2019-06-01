@@ -36,7 +36,7 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
         _ => panic!("Not supported for any Struct without named fields"),
     };
 
-    let args_body = match fields {
+    let spec_body = match fields {
         syn::Fields::Named(fields) => {
             let named = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
             let num_variables = fields.named.len();
@@ -60,8 +60,8 @@ fn impl_args(ast: &syn::DeriveInput) -> TokenStream {
                 #body
             }
 
-            fn args() -> &'static [entrance::Arg] {
-                #args_body
+            fn spec() -> &'static [entrance::Arg] {
+                #spec_body
             }
         }
     };

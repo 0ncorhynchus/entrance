@@ -31,7 +31,7 @@ impl error::Error for OptionError {
 
 pub trait Options: Sized {
     fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self>;
-    fn opts() -> &'static [Opt];
+    fn spec() -> &'static [Opt];
 }
 
 impl Options for () {
@@ -39,7 +39,7 @@ impl Options for () {
         Ok(())
     }
 
-    fn opts() -> &'static [Opt] {
+    fn spec() -> &'static [Opt] {
         &[]
     }
 }
@@ -102,7 +102,7 @@ mod tests {
             })
         }
 
-        fn opts() -> &'static [Opt] {
+        fn spec() -> &'static [Opt] {
             static OPTS: [Opt; 3] = [
                 Opt {
                     long: "flag1",

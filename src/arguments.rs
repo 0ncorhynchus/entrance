@@ -25,7 +25,7 @@ impl error::Error for ArgumentError {
 
 pub trait Arguments: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
-    fn args() -> &'static [Arg];
+    fn spec() -> &'static [Arg];
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -60,7 +60,7 @@ mod tests {
             })
         }
 
-        fn args() -> &'static [Arg] {
+        fn spec() -> &'static [Arg] {
             const ARGS: [Arg; 3] = [
                 Arg::new("arg1", ""),
                 Arg::new("arg2", ""),

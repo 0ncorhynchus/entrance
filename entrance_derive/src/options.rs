@@ -75,7 +75,7 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
     let num_options = fields.named.len();
     let options = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
     let opts_impl = quote! {
-        fn opts() -> &'static [entrance::Opt] {
+        fn spec() -> &'static [entrance::Opt] {
             static OPTS: [entrance::Opt; #num_options] = [
                 #(
                     entrance::Opt {
