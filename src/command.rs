@@ -1,14 +1,15 @@
-use crate::Args;
+use crate::{Args, Options};
 use crate::Result;
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-pub struct Command<Arguments> {
+pub struct Command<Opts, Arguments> {
     name: String,
+    options: Opts,
     args: Arguments,
 }
 
-impl<A> Command<A> {
+impl<O, A> Command<O, A> {
     pub fn new(name: &str) -> CommandPrecursor<Self> {
         CommandPrecursor {
             name: name.to_string(),
@@ -20,11 +21,15 @@ impl<A> Command<A> {
         &self.name
     }
 
+    pub fn options(&self) -> &O {
+        &self.options
+    }
+
     pub fn args(&self) -> &A {
         &self.args
     }
 
-    pub fn help(&self) -> HelpDisplay<A> {
+    pub fn help(&self) -> HelpDisplay<O, A> {
         HelpDisplay::new(&self.name)
     }
 }
@@ -35,30 +40,34 @@ pub struct CommandPrecursor<Command> {
     _phantom: PhantomData<Command>,
 }
 
-impl<A> CommandPrecursor<Command<A>>
+impl<O, A> CommandPrecursor<Command<O, A>>
 where
+    O: Options,
     A: Args,
 {
-    pub fn parse_args<I: Iterator<Item = String>>(self, mut args: I) -> Result<Command<A>> {
+    pub fn parse_args<I: Iterator<Item = String>>(self, args: I) -> Result<Command<O, A>> {
+        let mut args = args.peekable();
         let _program_name = args.next();
         Ok(Command {
             name: self.name,
+            options: O::consume(&mut args)?,
             args: A::parse_from(args)?,
         })
     }
 }
 
 #[derive(Debug)]
-pub struct HelpDisplay<'a, A>(&'a str, PhantomData<A>);
+pub struct HelpDisplay<'a, O, A>(&'a str, PhantomData<O>, PhantomData<A>);
 
-impl<'a, A> HelpDisplay<'a, A> {
+impl<'a, O, A> HelpDisplay<'a, O, A> {
     fn new(name: &'a str) -> Self {
-        Self(name, PhantomData)
+        Self(name, PhantomData, PhantomData)
     }
 }
 
-impl<'a, A> std::fmt::Display for HelpDisplay<'a, A>
+impl<'a, O, A> std::fmt::Display for HelpDisplay<'a, O, A>
 where
+    O: Options,
     A: Args,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -125,7 +134,7 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<Arguments> =
+        let command: Command<(), Arguments> =
             Command::new("sample").parse_args(args.into_iter().map(|s| s.to_string()))?;
 
         assert_eq!(command.args().arg1, "arg1".to_string());
@@ -140,7 +149,7 @@ mod tests {
 
     #[test]
     fn format_usage() {
-        let usage = HelpDisplay::<Arguments>::new("sample");
+        let usage = HelpDisplay::<(), Arguments>::new("sample");
         assert_eq!(
             usage.to_string(),
             "\

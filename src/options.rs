@@ -31,6 +31,12 @@ pub trait Options: Sized {
     fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self>;
 }
 
+impl Options for () {
+    fn consume<I: Iterator<Item = String>>(_args: &mut Peekable<I>) -> Result<Self> {
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -9,7 +9,7 @@ struct Arguments {
 }
 
 fn main() {
-    let command: Command<Arguments> = match Command::new("sample").parse_args(env::args()) {
+    let command: Command<(), Arguments> = match Command::new("sample").parse_args(env::args()) {
         Ok(args) => args,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
