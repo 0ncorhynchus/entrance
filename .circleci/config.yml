@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: rust
+
+    steps:
+      - checkout
+
+      - run:
+          name: build
+          command: cargo build
+
+      - run:
+          name: test
+          command: cargo test
