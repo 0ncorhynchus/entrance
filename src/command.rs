@@ -2,6 +2,7 @@ use crate::Result;
 use crate::{Arguments, Options};
 use std::marker::PhantomData;
 
+/// A struct containing parsed options and arguments.
 #[derive(Debug)]
 pub struct Command<Opts, Arguments> {
     name: String,
@@ -34,6 +35,7 @@ impl<Opts, Args> Command<Opts, Args> {
     }
 }
 
+/// Helper struct for parsing command line arguments and returning `Command`.
 #[derive(Debug)]
 pub struct CommandPrecursor<Command> {
     name: String,
@@ -56,6 +58,7 @@ where
     }
 }
 
+/// Helper struct for printing help messages with `format!` and `{}`.
 #[derive(Debug)]
 pub struct HelpDisplay<'a, Opts, Args>(&'a str, PhantomData<Opts>, PhantomData<Args>);
 

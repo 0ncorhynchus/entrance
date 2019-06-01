@@ -29,6 +29,7 @@ impl error::Error for OptionError {
     }
 }
 
+/// A trait for parsing and containing options.
 pub trait Options: Sized {
     fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self>;
     fn spec() -> &'static [Opt];

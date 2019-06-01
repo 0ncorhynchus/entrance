@@ -23,6 +23,7 @@ impl error::Error for ArgumentError {
     }
 }
 
+/// A trait for parsing and containing arguments.
 pub trait Arguments: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
     fn spec() -> &'static [Arg];
