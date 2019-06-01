@@ -1,5 +1,5 @@
-use crate::{Args, Options};
 use crate::Result;
+use crate::{Args, Options};
 use std::marker::PhantomData;
 
 #[derive(Debug)]
@@ -75,14 +75,18 @@ where
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0, indent = SPACER)?;
+        if !O::opts().is_empty() {
+            write!(f, " [OPTIONS]")?;
+        }
         for arg in A::args() {
             write!(f, " <{}>", arg.name)?;
         }
         writeln!(f, "")?;
 
-        writeln!(f, "")?;
+        format_options(f, SPACER, O::opts())?;
 
         if let Some(longest_length) = A::args().iter().map(|arg| arg.name.len()).max() {
+            writeln!(f, "")?;
             writeln!(f, "ARGS:")?;
             for arg in A::args() {
                 writeln!(
@@ -98,6 +102,45 @@ where
 
         Ok(())
     }
+}
+
+fn format_options(
+    f: &mut std::fmt::Formatter,
+    spacer: &str,
+    opts: &[crate::Opt],
+) -> std::fmt::Result {
+    if let Some(longest_length) = opts.iter().map(|opt| opt.long.len()).max() {
+        writeln!(f, "")?;
+        writeln!(f, "OPTIONS")?;
+        if opts.iter().any(|opt| opt.short.is_some()) {
+            for opt in opts {
+                writeln!(
+                    f,
+                    "{spacer}{} --{:<width$}{spacer}{}",
+                    opt.short
+                        .map(|f| ['-', f].into_iter().collect())
+                        .unwrap_or("  ".to_string()),
+                    opt.long,
+                    opt.description,
+                    spacer = spacer,
+                    width = longest_length
+                )?;
+            }
+        } else {
+            for opt in opts {
+                writeln!(
+                    f,
+                    "{spacer}--{:<width$}{spacer}{}",
+                    opt.long,
+                    opt.description,
+                    spacer = spacer,
+                    width = longest_length
+                )?;
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

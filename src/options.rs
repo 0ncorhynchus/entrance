@@ -29,12 +29,24 @@ impl error::Error for Error {
 
 pub trait Options: Sized {
     fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self>;
+    fn opts() -> &'static [Opt];
 }
 
 impl Options for () {
     fn consume<I: Iterator<Item = String>>(_args: &mut Peekable<I>) -> Result<Self> {
         Ok(())
     }
+
+    fn opts() -> &'static [Opt] {
+        &[]
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Opt {
+    pub long: &'static str,
+    pub short: Option<char>,
+    pub description: &'static str,
 }
 
 #[cfg(test)]
@@ -86,6 +98,27 @@ mod tests {
                 flag2,
                 flag3,
             })
+        }
+
+        fn opts() -> &'static [Opt] {
+            static OPTS: [Opt; 3] = [
+                Opt {
+                    long: "flag1",
+                    short: Some('1'),
+                    description: "Option 1",
+                },
+                Opt {
+                    long: "flag2",
+                    short: Some('2'),
+                    description: "Option 2",
+                },
+                Opt {
+                    long: "flag3",
+                    short: Some('3'),
+                    description: "Option 3",
+                },
+            ];
+            &OPTS
         }
     }
 

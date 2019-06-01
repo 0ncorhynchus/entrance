@@ -54,7 +54,7 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
         args.next(); // Consume an element
     };
 
-    let body = quote! {
+    let consume_impl = quote! {
         fn consume<I: std::iter::Iterator<Item = std::string::String>>(
             args: &mut std::iter::Peekable<I>,
         ) -> std::result::Result<Self, entrance::options::Error> {
@@ -72,9 +72,27 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
         }
     };
 
+    let num_options = fields.named.len();
+    let options = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
+    let opts_impl = quote! {
+        fn opts() -> &'static [entrance::Opt] {
+            static OPTS: [entrance::Opt; #num_options] = [
+                #(
+                    entrance::Opt {
+                        long: stringify!(#options),
+                        short: None,
+                        description: "",
+                    },
+                )*
+            ];
+            &OPTS
+        }
+    };
+
     let gen = quote! {
         impl entrance::Options for #name {
-            #body
+            #consume_impl
+            #opts_impl
         }
     };
     gen.into()
