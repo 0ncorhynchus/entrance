@@ -12,7 +12,7 @@ pub fn args_derive(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(Options)]
-pub fn optionss_derive(input: TokenStream) -> TokenStream {
+pub fn options_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     options::impl_options(&ast)
 }
