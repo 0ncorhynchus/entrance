@@ -24,6 +24,18 @@ impl error::Error for ArgumentError {
 }
 
 /// A trait for parsing and containing arguments.
+///
+/// # Example
+/// ```
+/// use entrance::Arguments;
+/// use std::path::PathBuf;
+///
+/// #[derive(Arguments)]
+/// struct Args {
+///     num: f64,
+///     file: PathBuf,
+/// }
+/// ```
 pub trait Arguments: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
     fn spec() -> &'static [Arg];
@@ -54,42 +66,20 @@ impl Arg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
-
-    struct Args {
-        arg1: String,
-        arg2: i32,
-        arg3: PathBuf,
-    }
-
-    impl Arguments for Args {
-        fn parse_from<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
-            Ok(Self {
-                arg1: args.next().unwrap().parse()?,
-                arg2: args.next().unwrap().parse()?,
-                arg3: args.next().unwrap().parse()?,
-            })
-        }
-
-        fn spec() -> &'static [Arg] {
-            const ARGS: [Arg; 3] = [
-                Arg::new("arg1", ""),
-                Arg::new("arg2", ""),
-                Arg::new("arg3", ""),
-            ];
-            &ARGS
-        }
-    }
 
     #[test]
     fn parse_from() -> Result<()> {
         let args = ["arg1", "123", "path/to/file"];
-        let result = Args::parse_from(args.iter().map(|s| s.to_string()))?;
+        let mut args = args.iter().map(|s| s.to_string());
+        let _ = <()>::parse_from(&mut args)?;
 
-        assert_eq!(result.arg1, "arg1".to_string());
-        assert_eq!(result.arg2, 123);
-        assert_eq!(result.arg3, "path/to/file".parse::<PathBuf>().unwrap());
+        assert_eq!(args.next(), Some("arg1".to_string()));
 
         Ok(())
+    }
+
+    #[test]
+    fn spec() {
+        assert_eq!(<()>::spec().len(), 0);
     }
 }
