@@ -16,7 +16,7 @@ struct Opts {
 }
 
 fn main() {
-    let command: Command<Opts, Args> = match Command::new("sample").parse_args(env::args()) {
+    let command: Command<Opts, Args> = match Command::new("sample").parse(env::args()) {
         Ok(args) => args,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
@@ -26,7 +26,7 @@ fn main() {
     println!("--verbose: {}", command.options().verbose);
     println!("--version: {}", command.options().version);
     println!("--help: {}", command.options().help);
-    println!("integer: {}", command.args().integer);
-    println!("float:   {}", command.args().float);
-    println!("string:  {}", command.args().string);
+    println!("integer: {}", command.arguments().integer);
+    println!("float:   {}", command.arguments().float);
+    println!("string:  {}", command.arguments().string);
 }

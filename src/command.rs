@@ -1,14 +1,14 @@
 use crate::Result;
-use crate::{Arguments, Options, OptionItem};
-use std::marker::PhantomData;
+use crate::{Arguments, OptionItem, Options};
 use std::iter::Peekable;
+use std::marker::PhantomData;
 
 /// A struct containing parsed options and arguments.
 #[derive(Debug)]
-pub struct Command<Opts, Arguments> {
+pub struct Command<Opts, Args> {
     name: String,
     options: Opts,
-    args: Arguments,
+    args: Args,
 }
 
 impl<Opts, Args> Command<Opts, Args> {
@@ -27,7 +27,7 @@ impl<Opts, Args> Command<Opts, Args> {
         &self.options
     }
 
-    pub fn args(&self) -> &Args {
+    pub fn arguments(&self) -> &Args {
         &self.args
     }
 
@@ -48,13 +48,60 @@ where
     Opts: Options,
     Args: Arguments,
 {
-    pub fn parse_args<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args>> {
+    pub fn parse<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args>> {
+        Ok(self.parse_options(args)?.parse_arguments()?)
+    }
+
+    pub fn parse_options<I: Iterator<Item = String>>(
+        self,
+        args: I,
+    ) -> Result<OptionParsedCommand<Peekable<I>, Opts, Args>> {
         let mut args = args.peekable();
         let _program_name = args.next();
-        Ok(Command {
+        Ok(OptionParsedCommand {
             name: self.name,
             options: Opts::parse(take_options(&mut args).into_iter())?,
-            args: Args::parse(args)?,
+            iter: args,
+            _phantom: PhantomData,
+        })
+    }
+}
+
+/// A struct as an intermediate just after parsing options.
+///
+/// This `struct` is created by `parse_option` method on `CommandPrecursor`.
+#[derive(Debug)]
+pub struct OptionParsedCommand<I, Opts, Args> {
+    name: String,
+    iter: I,
+    options: Opts,
+    _phantom: PhantomData<Args>,
+}
+
+impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args>
+{
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn options(&self) -> &Opts {
+        &self.options
+    }
+
+    pub fn help(&self) -> HelpDisplay<Opts, Args> {
+        HelpDisplay::new(&self.name)
+    }
+
+    /// parse the other arguments.
+    pub fn parse_arguments(self) -> Result<Command<Opts, Args>>
+    where
+        I: Iterator<Item = String>,
+        Args: Arguments,
+    {
+        Ok(Command {
+            name: self.name,
+            options: self.options,
+            args: Args::parse(self.iter)?,
         })
     }
 }
@@ -214,12 +261,12 @@ mod tests {
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
         let command: Command<(), Args> =
-            Command::new("sample").parse_args(args.into_iter().map(|s| s.to_string()))?;
+            Command::new("sample").parse(args.iter().map(|s| s.to_string()))?;
 
-        assert_eq!(command.args().arg1, "arg1".to_string());
-        assert_eq!(command.args().arg2, 123);
+        assert_eq!(command.arguments().arg1, "arg1".to_string());
+        assert_eq!(command.arguments().arg2, 123);
         assert_eq!(
-            command.args().arg3,
+            command.arguments().arg3,
             "path/to/file".parse::<PathBuf>().unwrap()
         );
 

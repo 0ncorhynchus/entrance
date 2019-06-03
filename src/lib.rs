@@ -1,13 +1,12 @@
 //! Utilities for parsing command line arguments
 //!
-//! `entrance` provides the type assisted tools to parse command line argumuments.
+//! `entrance` provides type assisted tools for parsing command line argumuments.
 //!
 //! # Usage
 //!
-//! An example of `Command` with `Options` are:
-//!
 //! ```
 //! use entrance::*;
+//! use std::path::PathBuf;
 //!
 //! #[derive(Options)]
 //! struct Opts {
@@ -23,13 +22,34 @@
 //!     version: bool,
 //! }
 //!
-//! let args = ["program", "-v", "--version"].iter().map(|s| s.to_string());
-//! let command: Command<Opts, ()> =
-//!     Command::new("program").parse_args(args).unwrap();
+//! #[derive(Arguments)]
+//! struct Args {
+//!     #[description = "Path to a file"]
+//!     path: PathBuf,
+//! }
 //!
-//! assert!(command.options().version);
+//! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
+//!
+//! // Parse only options to exit immediately with "--version" or "--help".
+//! let command = Command::<Opts, Args>::new("program").parse_options(args).unwrap();
+//!
+//! if command.options().version {
+//!     // Print version information and exit.
+//! }
+//!
+//! if command.options().help {
+//!     println!("{}", command.help());
+//!     // Exit
+//! }
+//!
+//! // Parse the other arguments
+//! let command = command.parse_arguments().unwrap();
+//!
 //! assert!(!command.options().help);
+//! assert!(!command.options().version);
 //! assert!(command.options().verbose);
+//!
+//! assert_eq!(command.arguments().path, PathBuf::from("path/to/file"));
 //! ```
 
 mod arguments;

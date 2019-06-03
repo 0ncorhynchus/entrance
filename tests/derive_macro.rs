@@ -1,4 +1,4 @@
-use entrance::{Arguments, Options, OptionItem};
+use entrance::{Arguments, OptionItem, Options};
 use std::path::PathBuf;
 
 #[test]
