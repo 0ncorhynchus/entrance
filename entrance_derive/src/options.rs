@@ -105,42 +105,38 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         })
     });
     let parse_lines = quote! {
-        if arg.starts_with("--") {
-            match &arg[2..] {
-                #(
-                    #long_option_arms
-                )*
-                flag => {
-                    return Err(entrance::OptionError::InvalidLongOption(
-                        flag.to_string(),
-                    ));
-                }
-            }
-        } else if arg.starts_with("-") {
-            for c in arg[1..].chars() {
-                match c {
+        match option {
+            entrance::OptionItem::Long(option) => {
+                match option.as_str() {
                     #(
-                        #short_option_arms
+                        #long_option_arms
                     )*
-                    f => {
-                        return Err(entrance::OptionError::InvalidShortOption(f));
+                    _ => {
+                        return Err(entrance::OptionError::InvalidLongOption(option));
                     }
                 }
             }
-        } else {
-            break;
+            entrance::OptionItem::Short(o) => {
+                match o {
+                    #(
+                        #short_option_arms
+                    )*
+                    _ => {
+                        return Err(entrance::OptionError::InvalidShortOption(o));
+                    }
+                }
+            }
         }
-        args.next(); // Consume an element
     };
 
     let names = options.iter().map(|option| &option.name);
     let consume_impl = quote! {
-        fn consume<I: std::iter::Iterator<Item = std::string::String>>(
-            args: &mut std::iter::Peekable<I>,
+        fn consume<I: std::iter::Iterator<Item = entrance::OptionItem>>(
+            mut options: I,
         ) -> std::result::Result<Self, entrance::OptionError> {
             #declare_lines
 
-            while let Some(arg) = args.peek() {
+            for option in options {
                 #parse_lines
             }
 

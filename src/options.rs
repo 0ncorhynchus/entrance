@@ -1,6 +1,5 @@
 use std::error;
 use std::fmt;
-use std::iter::Peekable;
 
 type Result<T> = std::result::Result<T, OptionError>;
 
@@ -29,6 +28,12 @@ impl error::Error for OptionError {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum OptionItem {
+    Long(String),
+    Short(char),
+}
+
 /// A trait for parsing and containing options.
 ///
 /// # Example
@@ -46,22 +51,21 @@ impl error::Error for OptionError {
 /// }
 /// ```
 pub trait Options: Sized {
-    fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self>;
+    fn consume<I: Iterator<Item = OptionItem>>(options: I) -> Result<Self>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
 
 impl Options for () {
-    fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self> {
-        if let Some(arg) = args.peek() {
-            if arg.starts_with("--") {
-                return Err(OptionError::InvalidLongOption(arg[2..].to_string()));
-            } else if arg.starts_with("-") {
-                if let Some(f) = arg.chars().nth(1) {
-                    return Err(OptionError::InvalidShortOption(f));
-                } else {
-                    args.next();
+    fn consume<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
+        if let Some(option) = options.next() {
+            match option {
+                OptionItem::Long(option) => {
+                    return Err(OptionError::InvalidLongOption(option));
+                }
+                OptionItem::Short(o) => {
+                    return Err(OptionError::InvalidShortOption(o));
                 }
             }
         }
@@ -86,9 +90,11 @@ mod tests {
 
     #[test]
     fn consume() -> Result<()> {
-        let args = ["--flag1", "-2", "arg1", "arg2"];
-        let mut peekable = args.iter().map(|s| s.to_string()).peekable();
-        let opts = <()>::consume(&mut peekable);
+        let options = vec![
+            OptionItem::Long("flag1".to_string()),
+            OptionItem::Short('2'),
+        ];
+        let opts = <()>::consume(options.into_iter());
         assert_eq!(
             opts,
             Err(OptionError::InvalidLongOption("flag1".to_string()))

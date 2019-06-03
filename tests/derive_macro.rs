@@ -1,4 +1,4 @@
-use entrance::{Arguments, Options};
+use entrance::{Arguments, Options, OptionItem};
 use std::path::PathBuf;
 
 #[test]
@@ -29,18 +29,21 @@ fn options() -> Result<(), entrance::OptionError> {
         help: bool,
     }
 
-    let args = ["--help", "--verbose", "arg1", "arg2"];
-    let mut peekable = args.iter().map(|s| s.to_string()).peekable();
-    let opts = Opts::consume(&mut peekable)?;
+    let options = vec![
+        OptionItem::Long("help".to_string()),
+        OptionItem::Long("verbose".to_string()),
+    ];
+    let opts = Opts::consume(options.into_iter())?;
 
     assert!(opts.verbose);
     assert!(!opts.version);
     assert!(opts.help);
-    assert_eq!(peekable.next(), Some("arg1".to_string()));
 
-    let args = ["--help", "--invalid", "arg1", "arg2"];
-    let mut peekable = args.iter().map(|s| s.to_string()).peekable();
-    let opts = Opts::consume(&mut peekable);
+    let options = vec![
+        OptionItem::Long("help".to_string()),
+        OptionItem::Long("invalid".to_string()),
+    ];
+    let opts = Opts::consume(options.into_iter());
     assert_eq!(
         opts,
         Err(entrance::OptionError::InvalidLongOption(

@@ -1,6 +1,7 @@
 use crate::Result;
-use crate::{Arguments, Options};
+use crate::{Arguments, Options, OptionItem};
 use std::marker::PhantomData;
+use std::iter::Peekable;
 
 /// A struct containing parsed options and arguments.
 #[derive(Debug)]
@@ -52,10 +53,33 @@ where
         let _program_name = args.next();
         Ok(Command {
             name: self.name,
-            options: Opts::consume(&mut args)?,
+            options: Opts::consume(take_options(&mut args).into_iter())?,
             args: Args::parse_from(args)?,
         })
     }
+}
+
+fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<OptionItem> {
+    let mut options = Vec::new();
+    while let Some(arg) = args.peek() {
+        if arg.starts_with("--") {
+            if arg.len() == 2 {
+                break;
+            }
+            options.push(OptionItem::Long(arg[2..].to_string()));
+        } else if arg.starts_with("-") {
+            if arg.len() == 1 {
+                break;
+            }
+            for c in arg[1..].chars() {
+                options.push(OptionItem::Short(c));
+            }
+        } else {
+            break;
+        }
+        args.next(); // Consume an argument
+    }
+    options
 }
 
 /// Helper struct for printing help messages with `format!` and `{}`.
