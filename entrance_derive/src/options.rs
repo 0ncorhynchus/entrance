@@ -9,10 +9,17 @@ pub fn impl_options(ast: &syn::DeriveInput) -> TokenStream {
         _ => panic!("Not supported for any type except Struct"),
     };
 
-    match fields {
-        syn::Fields::Named(fields) => impl_for_named_fields(name, fields),
+    let body = match fields {
+        syn::Fields::Named(fields) => impl_for_named_fields(fields),
         _ => panic!("Not supported for any Struct without named fields"),
-    }
+    };
+
+    let gen = quote! {
+        impl entrance::Options for #name {
+            #body
+        }
+    };
+    gen.into()
 }
 
 fn long_option_arm(option: &syn::Ident) -> impl quote::ToTokens {
@@ -40,7 +47,7 @@ fn option_to_tokens<T: quote::ToTokens>(x: Option<T>) -> impl quote::ToTokens {
     }
 }
 
-fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenStream {
+fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     let names: Vec<_> = fields
         .named
         .iter()
@@ -136,11 +143,8 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
         }
     };
 
-    let gen = quote! {
-        impl entrance::Options for #name {
-            #consume_impl
-            #opts_impl
-        }
-    };
-    gen.into()
+    quote! {
+        #consume_impl
+        #opts_impl
+    }
 }
