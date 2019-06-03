@@ -11,18 +11,25 @@
 //!
 //! #[derive(Options)]
 //! struct Opts {
+//!     #[description = "Print help message"]
+//!     #[short = 'h']
 //!     help: bool,
+//!
+//!     #[description = "Use verbose output"]
+//!     #[short = 'v']
 //!     verbose: bool,
+//!
+//!     #[description = "Print version information"]
 //!     version: bool,
 //! }
 //!
-//! let args = ["program", "--version"].iter().map(|s| s.to_string());
+//! let args = ["program", "-v", "--version"].iter().map(|s| s.to_string());
 //! let command: Command<Opts, ()> =
 //!     Command::new("program").parse_args(args).unwrap();
 //!
 //! assert!(command.options().version);
 //! assert!(!command.options().help);
-//! assert!(!command.options().verbose);
+//! assert!(command.options().verbose);
 //! ```
 
 mod arguments;

@@ -15,8 +15,8 @@ struct Opts {
     #[description = "Print the usage"]
     #[short = 'h']
     help: bool,
+
     #[description = "Print the version"]
-    #[short = 'v']
     version: bool,
 }
 

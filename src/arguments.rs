@@ -32,12 +32,17 @@ impl error::Error for ArgumentError {
 ///
 /// #[derive(Arguments)]
 /// struct Args {
+///     #[description = "The number of lines"]
 ///     num: f64,
+///
+///     #[description = "Path to a file"]
 ///     file: PathBuf,
 /// }
 /// ```
 pub trait Arguments: Sized {
     fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
+
+    /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Arg];
 }
 

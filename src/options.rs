@@ -37,12 +37,18 @@ impl error::Error for OptionError {
 ///
 /// #[derive(Options)]
 /// struct Opts {
+///     #[description = "Print help message"]
+///     #[short = 'h']
 ///     help: bool,
+///
+///     #[description = "Print version infomation"]
 ///     version: bool,
 /// }
 /// ```
 pub trait Options: Sized {
     fn consume<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Result<Self>;
+
+    /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
 

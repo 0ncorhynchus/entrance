@@ -171,15 +171,15 @@ mod tests {
             const ARGS: [Arg; 3] = [
                 Arg {
                     name: "arg1",
-                    description: "This is parsed as String"
+                    description: "This is parsed as String",
                 },
                 Arg {
                     name: "arg2",
-                    description: "This is parsed as i32"
+                    description: "This is parsed as i32",
                 },
                 Arg {
                     name: "arg3",
-                    description: "This is parsed as PathBuf"
+                    description: "This is parsed as PathBuf",
                 },
             ];
             &ARGS
