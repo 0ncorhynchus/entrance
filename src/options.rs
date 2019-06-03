@@ -51,14 +51,14 @@ pub enum OptionItem {
 /// }
 /// ```
 pub trait Options: Sized {
-    fn consume<I: Iterator<Item = OptionItem>>(options: I) -> Result<Self>;
+    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Result<Self>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
 
 impl Options for () {
-    fn consume<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
+    fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
         if let Some(option) = options.next() {
             match option {
                 OptionItem::Long(option) => {
@@ -89,12 +89,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn consume() -> Result<()> {
+    fn parse() -> Result<()> {
         let options = vec![
             OptionItem::Long("flag1".to_string()),
             OptionItem::Short('2'),
         ];
-        let opts = <()>::consume(options.into_iter());
+        let opts = <()>::parse(options.into_iter());
         assert_eq!(
             opts,
             Err(OptionError::InvalidLongOption("flag1".to_string()))

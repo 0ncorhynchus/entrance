@@ -11,7 +11,7 @@ fn struct_with_named_fields() -> entrance::Result<()> {
     }
 
     let args = ["arg1", "123", "path/to/file"];
-    let result = Args::parse_from(args.iter().map(|s| s.to_string()))?;
+    let result = Args::parse(args.iter().map(|s| s.to_string()))?;
 
     assert_eq!(result.arg1, "arg1".to_string());
     assert_eq!(result.arg2, 123);
@@ -33,7 +33,7 @@ fn options() -> Result<(), entrance::OptionError> {
         OptionItem::Long("help".to_string()),
         OptionItem::Long("verbose".to_string()),
     ];
-    let opts = Opts::consume(options.into_iter())?;
+    let opts = Opts::parse(options.into_iter())?;
 
     assert!(opts.verbose);
     assert!(!opts.version);
@@ -43,7 +43,7 @@ fn options() -> Result<(), entrance::OptionError> {
         OptionItem::Long("help".to_string()),
         OptionItem::Long("invalid".to_string()),
     ];
-    let opts = Opts::consume(options.into_iter());
+    let opts = Opts::parse(options.into_iter());
     assert_eq!(
         opts,
         Err(entrance::OptionError::InvalidLongOption(

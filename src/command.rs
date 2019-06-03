@@ -53,8 +53,8 @@ where
         let _program_name = args.next();
         Ok(Command {
             name: self.name,
-            options: Opts::consume(take_options(&mut args).into_iter())?,
-            args: Args::parse_from(args)?,
+            options: Opts::parse(take_options(&mut args).into_iter())?,
+            args: Args::parse(args)?,
         })
     }
 }
@@ -183,7 +183,7 @@ mod tests {
     }
 
     impl Arguments for Args {
-        fn parse_from<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
+        fn parse<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
             Ok(Self {
                 arg1: args.next().unwrap().parse()?,
                 arg2: args.next().unwrap().parse()?,

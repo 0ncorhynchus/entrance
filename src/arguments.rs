@@ -40,14 +40,14 @@ impl error::Error for ArgumentError {
 /// }
 /// ```
 pub trait Arguments: Sized {
-    fn parse_from<I: Iterator<Item = String>>(args: I) -> Result<Self>;
+    fn parse<I: Iterator<Item = String>>(args: I) -> Result<Self>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Arg];
 }
 
 impl Arguments for () {
-    fn parse_from<I: Iterator<Item = String>>(_args: I) -> Result<Self> {
+    fn parse<I: Iterator<Item = String>>(_args: I) -> Result<Self> {
         Ok(())
     }
 
@@ -67,10 +67,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_from() -> Result<()> {
+    fn parse() -> Result<()> {
         let args = ["arg1", "123", "path/to/file"];
         let mut args = args.iter().map(|s| s.to_string());
-        let _ = <()>::parse_from(&mut args)?;
+        let _ = <()>::parse(&mut args)?;
 
         assert_eq!(args.next(), Some("arg1".to_string()));
 

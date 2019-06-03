@@ -130,8 +130,8 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     };
 
     let names = options.iter().map(|option| &option.name);
-    let consume_impl = quote! {
-        fn consume<I: std::iter::Iterator<Item = entrance::OptionItem>>(
+    let parse_impl = quote! {
+        fn parse<I: std::iter::Iterator<Item = entrance::OptionItem>>(
             mut options: I,
         ) -> std::result::Result<Self, entrance::OptionError> {
             #declare_lines
@@ -168,7 +168,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     };
 
     quote! {
-        #consume_impl
+        #parse_impl
         #opts_impl
     }
 }
