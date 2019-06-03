@@ -169,9 +169,18 @@ mod tests {
 
         fn spec() -> &'static [Arg] {
             const ARGS: [Arg; 3] = [
-                Arg::new("arg1", "This is parsed as String"),
-                Arg::new("arg2", "This is parsed as i32"),
-                Arg::new("arg3", "This is parsed as PathBuf"),
+                Arg {
+                    name: "arg1",
+                    description: "This is parsed as String"
+                },
+                Arg {
+                    name: "arg2",
+                    description: "This is parsed as i32"
+                },
+                Arg {
+                    name: "arg3",
+                    description: "This is parsed as PathBuf"
+                },
             ];
             &ARGS
         }

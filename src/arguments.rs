@@ -57,12 +57,6 @@ pub struct Arg {
     pub description: &'static str,
 }
 
-impl Arg {
-    pub const fn new(name: &'static str, description: &'static str) -> Self {
-        Self { name, description }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -73,7 +73,10 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         fn spec() -> &'static [entrance::Arg] {
             const ARGS: [entrance::Arg; #num_variables] = [
                 #(
-                    entrance::Arg::new(stringify!(#names), #descriptions),
+                    entrance::Arg {
+                        name: stringify!(#names),
+                        description: #descriptions,
+                    },
                 )*
             ];
             &ARGS
