@@ -1,4 +1,4 @@
-use crate::get_description;
+use crate::{extract_name_values, get_description};
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -72,9 +72,14 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
         }
     };
 
-    let num_options = fields.named.len();
-    let options = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
-    let descriptions = fields.named.iter().map(|f| get_description(&f.attrs));
+    let named = &fields.named;
+    let num_options = named.len();
+    let options = named.iter().map(|f| f.ident.as_ref().unwrap());
+    let name_values: Vec<_> = named
+        .iter()
+        .map(|f| extract_name_values(&f.attrs))
+        .collect();
+    let descriptions = name_values.iter().map(|x| get_description(x));
     let opts_impl = quote! {
         fn spec() -> &'static [entrance::Opt] {
             static OPTS: [entrance::Opt; #num_options] = [

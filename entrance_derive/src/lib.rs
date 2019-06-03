@@ -46,9 +46,8 @@ fn get_single_attribute<'a>(
     extracted.into_iter().next()
 }
 
-fn get_description(attrs: &[syn::Attribute]) -> String {
-    let name_values = extract_name_values(attrs);
-    if let Some(lit) = get_single_attribute("description", &name_values) {
+fn get_description(name_values: &[syn::MetaNameValue]) -> String {
+    if let Some(lit) = get_single_attribute("description", name_values) {
         if let syn::Lit::Str(string) = lit {
             string.value()
         } else {

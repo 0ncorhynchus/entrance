@@ -1,6 +1,6 @@
+use crate::{extract_name_values, get_description};
 use proc_macro::TokenStream;
 use quote::quote;
-use crate::get_description;
 
 pub fn impl_arguments(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
@@ -29,7 +29,10 @@ pub fn impl_arguments(ast: &syn::DeriveInput) -> TokenStream {
     let spec_body = match fields {
         syn::Fields::Named(fields) => {
             let named = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
-            let descriptions = fields.named.iter().map(|f| get_description(&f.attrs));
+            let descriptions = fields
+                .named
+                .iter()
+                .map(|f| get_description(&extract_name_values(&f.attrs)));
             let num_variables = fields.named.len();
             quote! {
                 const ARGS: [entrance::Arg; #num_variables] = [
