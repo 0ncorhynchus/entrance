@@ -83,7 +83,10 @@ mod tests {
         let args = ["--flag1", "-2", "arg1", "arg2"];
         let mut peekable = args.iter().map(|s| s.to_string()).peekable();
         let opts = <()>::consume(&mut peekable);
-        assert_eq!(opts, Err(OptionError::InvalidLongOption("flag1".to_string())));
+        assert_eq!(
+            opts,
+            Err(OptionError::InvalidLongOption("flag1".to_string()))
+        );
         Ok(())
     }
 
