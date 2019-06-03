@@ -55,6 +55,14 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
     };
 
     let option_arms = names.iter().map(|opt| long_option_arm(opt));
+    let short_option_arms = fields.named.iter().filter_map(|f| {
+        let ident = f.ident.as_ref().unwrap();
+        let name_values = extract_name_values(&f.attrs);
+        let short = get_short_attribute(&name_values)?;
+        Some(quote! {
+            #short => #ident = true,
+        })
+    });
     let parse_lines = quote! {
         if arg.starts_with("--") {
             match &arg[2..] {
@@ -65,6 +73,17 @@ fn impl_for_named_fields(name: &syn::Ident, fields: &syn::FieldsNamed) -> TokenS
                     return Err(entrance::OptionError::InvalidLongOption(
                         flag.to_string(),
                     ));
+                }
+            }
+        } else if arg.starts_with("-") {
+            for c in arg[1..].chars() {
+                match c {
+                    #(
+                        #short_option_arms
+                    )*
+                    f => {
+                        return Err(entrance::OptionError::InvalidShortOption(f));
+                    }
                 }
             }
         } else {
