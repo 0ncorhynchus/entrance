@@ -1,6 +1,7 @@
 use crate::{extract_name_values, get_description, get_single_attribute};
 use proc_macro::TokenStream;
 use quote::quote;
+use std::convert::{TryFrom, TryInto};
 
 pub fn impl_options(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
@@ -20,6 +21,31 @@ pub fn impl_options(ast: &syn::DeriveInput) -> TokenStream {
         }
     };
     gen.into()
+}
+
+struct OptionItem<'a> {
+    name: &'a syn::Ident,
+    short: Option<char>,
+    description: String,
+}
+
+impl<'a> TryFrom<&'a syn::Field> for OptionItem<'a> {
+    type Error = &'static str;
+
+    fn try_from(field: &'a syn::Field) -> Result<Self, Self::Error> {
+        let name = field
+            .ident
+            .as_ref()
+            .ok_or("The tuple structure is not available.")?;
+        let name_value_attrs = extract_name_values(&field.attrs);
+        let short = get_short_attribute(&name_value_attrs);
+        let description = get_description(&name_value_attrs);
+        Ok(Self {
+            name,
+            short,
+            description,
+        })
+    }
 }
 
 fn long_option_arm(option: &syn::Ident) -> impl quote::ToTokens {
@@ -48,26 +74,25 @@ fn option_to_tokens<T: quote::ToTokens>(x: Option<T>) -> impl quote::ToTokens {
 }
 
 fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
-    let names: Vec<_> = fields
+    let items: Vec<OptionItem> = fields
         .named
         .iter()
-        .map(|f| f.ident.as_ref().unwrap())
+        .map(|field| field.try_into().unwrap())
         .collect();
 
-    let names_for_declare = names.iter();
+    let names_for_declare = items.iter().map(|item| &item.name);
     let declare_lines = quote! {
         #(
             let mut #names_for_declare = false;
         )*
     };
 
-    let option_arms = names.iter().map(|opt| long_option_arm(opt));
-    let short_option_arms = fields.named.iter().filter_map(|f| {
-        let ident = f.ident.as_ref().unwrap();
-        let name_values = extract_name_values(&f.attrs);
-        let short = get_short_attribute(&name_values)?;
+    let option_arms = items.iter().map(|item| long_option_arm(&item.name));
+    let short_option_arms = items.iter().filter_map(|option| {
+        let name = &option.name;
+        let short = option.short?;
         Some(quote! {
-            #short => #ident = true,
+            #short => #name = true,
         })
     });
     let parse_lines = quote! {
@@ -99,6 +124,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         args.next(); // Consume an element
     };
 
+    let names = items.iter().map(|item| &item.name);
     let consume_impl = quote! {
         fn consume<I: std::iter::Iterator<Item = std::string::String>>(
             args: &mut std::iter::Peekable<I>,
@@ -117,17 +143,10 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         }
     };
 
-    let named = &fields.named;
-    let num_options = named.len();
-    let options = named.iter().map(|f| f.ident.as_ref().unwrap());
-    let name_values: Vec<_> = named
-        .iter()
-        .map(|f| extract_name_values(&f.attrs))
-        .collect();
-    let descriptions = name_values.iter().map(|x| get_description(x));
-    let shorts = name_values
-        .iter()
-        .map(|x| option_to_tokens(get_short_attribute(x)));
+    let num_options = items.len();
+    let options = items.iter().map(|option| &option.name);
+    let descriptions = items.iter().map(|option| &option.description);
+    let shorts = items.iter().map(|option| option_to_tokens(option.short));
     let opts_impl = quote! {
         fn spec() -> &'static [entrance::Opt] {
             static OPTS: [entrance::Opt; #num_options] = [
