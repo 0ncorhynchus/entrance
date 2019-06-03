@@ -119,7 +119,7 @@ fn format_options(
             for opt in opts {
                 writeln!(
                     f,
-                    "{spacer}{} --{:<width$}{spacer}{}",
+                    "{spacer}{}, --{:<width$}{spacer}{}",
                     opt.short
                         .map(|f| ['-', f].into_iter().collect())
                         .unwrap_or("  ".to_string()),
