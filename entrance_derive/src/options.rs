@@ -81,21 +81,21 @@ fn option_to_tokens<T: quote::ToTokens>(x: Option<T>) -> impl quote::ToTokens {
 }
 
 fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
-    let items: Vec<OptionItem> = fields
+    let options: Vec<OptionItem> = fields
         .named
         .iter()
         .map(|field| field.try_into().unwrap())
         .collect();
 
-    let names_for_declare = items.iter().map(|item| &item.name);
+    let names = options.iter().map(|option| &option.name);
     let declare_lines = quote! {
         #(
-            let mut #names_for_declare = false;
+            let mut #names = false;
         )*
     };
 
-    let option_arms = items.iter().map(|item| long_option_arm(&item.name));
-    let short_option_arms = items.iter().filter_map(|option| {
+    let long_option_arms = options.iter().map(|option| long_option_arm(&option.name));
+    let short_option_arms = options.iter().filter_map(|option| {
         let name = &option.name;
         let short = option.short?;
         Some(quote! {
@@ -106,7 +106,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         if arg.starts_with("--") {
             match &arg[2..] {
                 #(
-                    #option_arms
+                    #long_option_arms
                 )*
                 flag => {
                     return Err(entrance::OptionError::InvalidLongOption(
@@ -131,7 +131,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         args.next(); // Consume an element
     };
 
-    let names = items.iter().map(|item| &item.name);
+    let names = options.iter().map(|option| &option.name);
     let consume_impl = quote! {
         fn consume<I: std::iter::Iterator<Item = std::string::String>>(
             args: &mut std::iter::Peekable<I>,
@@ -150,16 +150,16 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         }
     };
 
-    let num_options = items.len();
-    let options = items.iter().map(|option| &option.name);
-    let descriptions = items.iter().map(|option| &option.description);
-    let shorts = items.iter().map(|option| option_to_tokens(option.short));
+    let num_options = options.len();
+    let names = options.iter().map(|option| &option.name);
+    let descriptions = options.iter().map(|option| &option.description);
+    let shorts = options.iter().map(|option| option_to_tokens(option.short));
     let opts_impl = quote! {
         fn spec() -> &'static [entrance::Opt] {
             static OPTS: [entrance::Opt; #num_options] = [
                 #(
                     entrance::Opt {
-                        long: stringify!(#options),
+                        long: stringify!(#names),
                         short: #shorts,
                         description: #descriptions,
                     },
