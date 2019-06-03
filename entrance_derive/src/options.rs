@@ -56,7 +56,9 @@ fn long_option_arm(option: &syn::Ident) -> impl quote::ToTokens {
     )
 }
 
-fn get_short_attribute(name_value_attrs: &[syn::MetaNameValue]) -> Result<Option<char>, &'static str> {
+fn get_short_attribute(
+    name_value_attrs: &[syn::MetaNameValue],
+) -> Result<Option<char>, &'static str> {
     Ok(match get_single_attribute("short", name_value_attrs) {
         Some(lit) => {
             if let syn::Lit::Char(c) = lit {
