@@ -1,6 +1,7 @@
 use crate::{extract_name_values, get_description};
 use proc_macro::TokenStream;
 use quote::quote;
+use std::convert::{TryFrom, TryInto};
 
 pub fn impl_arguments(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
@@ -10,54 +11,78 @@ pub fn impl_arguments(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let body = match fields {
-        syn::Fields::Named(fields) => {
-            let named = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
-            quote! {
-                Ok(Self {
-                    #(
-                        #named:
-                            args.next()
-                                .ok_or(entrance::ArgumentError::InvalidNumberOfArguments)?
-                                .parse()?,
-                    )*
-                })
-            }
-        }
-        _ => panic!("Not supported for any Struct without named fields"),
-    };
-
-    let spec_body = match fields {
-        syn::Fields::Named(fields) => {
-            let named = fields.named.iter().map(|f| f.ident.as_ref().unwrap());
-            let descriptions = fields
-                .named
-                .iter()
-                .map(|f| get_description(&extract_name_values(&f.attrs)));
-            let num_variables = fields.named.len();
-            quote! {
-                const ARGS: [entrance::Arg; #num_variables] = [
-                    #(
-                        entrance::Arg::new(stringify!(#named), #descriptions),
-                    )*
-                ];
-                &ARGS
-            }
-        }
+        syn::Fields::Named(fields) => impl_for_named_fields(fields),
         _ => panic!("Not supported for any Struct without named fields"),
     };
 
     let gen = quote! {
-        impl Arguments for #name {
-            fn parse_from<I: std::iter::Iterator<Item = std::string::String>>(
-                mut args: I
-            ) -> entrance::Result<Self> {
-                #body
-            }
-
-            fn spec() -> &'static [entrance::Arg] {
-                #spec_body
-            }
+        impl entrance::Arguments for #name {
+            #body
         }
     };
     gen.into()
+}
+
+struct ArgumentItem<'a> {
+    name: &'a syn::Ident,
+    description: String,
+}
+
+impl<'a> TryFrom<&'a syn::Field> for ArgumentItem<'a> {
+    type Error = &'static str;
+
+    fn try_from(field: &'a syn::Field) -> Result<Self, Self::Error> {
+        let name = field
+            .ident
+            .as_ref()
+            .ok_or("The tuple structure is not available.")?;
+        let name_value_attrs = extract_name_values(&field.attrs);
+        let description = get_description(&name_value_attrs);
+
+        Ok(Self { name, description })
+    }
+}
+
+fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
+    let arguments: Vec<ArgumentItem> = fields
+        .named
+        .iter()
+        .map(|field| field.try_into().unwrap())
+        .collect();
+
+    let names = arguments.iter().map(|argument| &argument.name);
+    let parse_impl = quote! {
+        fn parse_from<I: std::iter::Iterator<Item = std::string::String>>(
+            mut args: I
+        ) -> entrance::Result<Self> {
+            Ok(Self {
+                #(
+                    #names:
+                        args.next()
+                            .ok_or(entrance::ArgumentError::InvalidNumberOfArguments)?
+                            .parse()?,
+                )*
+            })
+        }
+    };
+
+    let num_variables = arguments.len();
+    let names = arguments.iter().map(|argument| &argument.name);
+    let descriptions = arguments.iter().map(|argument| &argument.description);
+    let spec_impl = quote! {
+        fn spec() -> &'static [entrance::Arg] {
+            const ARGS: [entrance::Arg; #num_variables] = [
+                #(
+                    entrance::Arg::new(stringify!(#names), #descriptions),
+                )*
+            ];
+            &ARGS
+        }
+    };
+
+    quote! {
+        #parse_impl
+
+        #spec_impl
+    }
 }
