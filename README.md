@@ -3,8 +3,12 @@ entrance
 
 [![CircleCI](https://circleci.com/gh/0ncorhynchus/entrance.svg?style=svg)](https://circleci.com/gh/0ncorhynchus/entrance)
 
+Type sytem assisted command line argument parser
+
+`entrance` provides type assisted tools for parsing command line arguments
+
 Simple usage
-============
+------------
 
 ```rust
 use entrance::*;
