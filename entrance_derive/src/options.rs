@@ -38,8 +38,10 @@ impl<'a> TryFrom<&'a syn::Field> for OptionItem<'a> {
             .as_ref()
             .ok_or("The tuple structure is not available.")?;
         let name_value_attrs = extract_name_values(&field.attrs);
-        let short = get_short_attribute(&name_value_attrs);
+
+        let short = get_short_attribute(&name_value_attrs)?;
         let description = get_description(&name_value_attrs);
+
         Ok(Self {
             name,
             short,
@@ -54,12 +56,17 @@ fn long_option_arm(option: &syn::Ident) -> impl quote::ToTokens {
     )
 }
 
-fn get_short_attribute(name_values: &[syn::MetaNameValue]) -> Option<char> {
-    if let syn::Lit::Char(c) = get_single_attribute("short", name_values)? {
-        Some(c.value())
-    } else {
-        panic!("Invalid usage of `short` attribute: expected a char");
-    }
+fn get_short_attribute(name_value_attrs: &[syn::MetaNameValue]) -> Result<Option<char>, &'static str> {
+    Ok(match get_single_attribute("short", name_value_attrs) {
+        Some(lit) => {
+            if let syn::Lit::Char(c) = lit {
+                Some(c.value())
+            } else {
+                return Err("Invalid usage of `short` attribute: expected a char");
+            }
+        }
+        None => None,
+    })
 }
 
 fn option_to_tokens<T: quote::ToTokens>(x: Option<T>) -> impl quote::ToTokens {
