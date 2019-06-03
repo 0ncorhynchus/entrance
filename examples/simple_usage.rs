@@ -3,7 +3,9 @@ use std::env::args;
 
 #[derive(Options)]
 struct Opts {
+    #[description = "Print the usage"]
     help: bool,
+    #[description = "Print the version"]
     version: bool,
 }
 

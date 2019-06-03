@@ -1,18 +1,60 @@
 extern crate proc_macro;
 
-mod options;
 mod arguments;
+mod options;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(Arguments)]
+#[proc_macro_derive(Arguments, attributes(description))]
 pub fn args_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     arguments::impl_arguments(&ast)
 }
 
-#[proc_macro_derive(Options)]
+#[proc_macro_derive(Options, attributes(description))]
 pub fn options_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     options::impl_options(&ast)
+}
+
+fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
+    attrs
+        .iter()
+        .filter_map(|attr| attr.interpret_meta())
+        .filter_map(|meta| {
+            if let syn::Meta::NameValue(name_value) = meta {
+                Some(name_value)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn get_single_attribute<'a>(
+    name: &'static str,
+    attrs: &'a [syn::MetaNameValue],
+) -> Option<&'a syn::Lit> {
+    let extracted: Vec<_> = attrs
+        .iter()
+        .filter(|attr| attr.ident == name)
+        .map(|attr| &attr.lit)
+        .collect();
+    if extracted.len() > 1 {
+        panic!(format!("Invalid duplicated attribute `{}`", name));
+    }
+    extracted.into_iter().next()
+}
+
+fn get_description(attrs: &[syn::Attribute]) -> String {
+    let name_values = extract_name_values(attrs);
+    if let Some(lit) = get_single_attribute("description", &name_values) {
+        if let syn::Lit::Str(string) = lit {
+            string.value()
+        } else {
+            panic!("Invalid usage of the `description` attribute");
+        }
+    } else {
+        String::new()
+    }
 }
