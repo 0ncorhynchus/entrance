@@ -3,7 +3,7 @@ entrance
 
 [![Crates.io](https://img.shields.io/crates/v/entrance.svg)](https://crates.io/crates/entrance)
 [![Document](https://docs.rs/entrance/badge.svg)](https://docs.rs/entrance)
-[![CircleCI](https://circleci.com/gh/0ncorhynchus/entrance.svg?style=svg)](https://circleci.com/gh/0ncorhynchus/entrance)
+[![CircleCI](https://circleci.com/gh/0ncorhynchus/entrance.svg?style=shield)](https://circleci.com/gh/0ncorhynchus/entrance)
 
 Type sytem assisted command line argument parser
 
