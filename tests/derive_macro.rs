@@ -15,7 +15,7 @@ fn struct_with_named_fields() -> entrance::Result<()> {
 
     assert_eq!(result.arg1, "arg1".to_string());
     assert_eq!(result.arg2, 123);
-    assert_eq!(result.arg3, "path/to/file".parse::<PathBuf>().unwrap());
+    assert_eq!(result.arg3, PathBuf::from("path/to/file"));
 
     Ok(())
 }
