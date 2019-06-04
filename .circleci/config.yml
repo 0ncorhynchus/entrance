@@ -12,12 +12,6 @@ jobs:
     steps:
       - checkout
       - run: cargo build
-  test:
-    docker:
-      - image: rust
-    steps:
-      - checkout
-      - run: cargo test
   fmt:
     docker:
       - image: rust
@@ -32,3 +26,19 @@ jobs:
       - checkout
       - run: rustup component add clippy
       - run: cargo clippy
+  test:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run: cargo test
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - check
+      - build
+      - fmt
+      - lint
+      - test
