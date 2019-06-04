@@ -78,8 +78,7 @@ pub struct OptionParsedCommand<I, Opts, Args> {
     _phantom: PhantomData<Args>,
 }
 
-impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args>
-{
+impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args> {
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -114,7 +113,7 @@ fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<Optio
                 break;
             }
             options.push(OptionItem::Long(arg[2..].to_string()));
-        } else if arg.starts_with("-") {
+        } else if arg.starts_with('-') {
             if arg.len() == 1 {
                 break;
             }
@@ -145,7 +144,7 @@ where
     Args: Arguments,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        const SPACER: &'static str = "    ";
+        const SPACER: &str = "    ";
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0, indent = SPACER)?;
@@ -155,12 +154,12 @@ where
         for arg in Args::spec() {
             write!(f, " <{}>", arg.name)?;
         }
-        writeln!(f, "")?;
+        writeln!(f)?;
 
         format_options(f, SPACER, Opts::spec())?;
 
         if let Some(longest_length) = Args::spec().iter().map(|arg| arg.name.len()).max() {
-            writeln!(f, "")?;
+            writeln!(f)?;
             writeln!(f, "ARGS:")?;
             for arg in Args::spec() {
                 writeln!(
@@ -184,7 +183,7 @@ fn format_options(
     opts: &[crate::Opt],
 ) -> std::fmt::Result {
     if let Some(longest_length) = opts.iter().map(|opt| opt.long.len()).max() {
-        writeln!(f, "")?;
+        writeln!(f)?;
         writeln!(f, "OPTIONS")?;
         if opts.iter().any(|opt| opt.short.is_some()) {
             for opt in opts {
@@ -192,8 +191,8 @@ fn format_options(
                     f,
                     "{spacer}{}, --{:<width$}{spacer}{}",
                     opt.short
-                        .map(|f| ['-', f].into_iter().collect())
-                        .unwrap_or("  ".to_string()),
+                        .map(|f| ['-', f].iter().collect())
+                        .unwrap_or_else(|| "  ".to_string()),
                     opt.long,
                     opt.description,
                     spacer = spacer,
