@@ -38,7 +38,15 @@ workflows:
   build_and_test:
     jobs:
       - check
-      - build
-      - fmt
-      - lint
-      - test
+      - build:
+          requires:
+            - check
+      - fmt:
+          requires:
+            - check
+      - lint:
+          requires:
+            - check
+      - test:
+          requires:
+            - check
