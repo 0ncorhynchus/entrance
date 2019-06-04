@@ -18,7 +18,7 @@ jobs:
     steps:
       - checkout
       - run: rustup component add rustfmt
-      - run: cargo fmt
+      - run: cargo fmt -- --check
   lint:
     docker:
       - image: rust
