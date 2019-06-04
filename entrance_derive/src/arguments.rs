@@ -53,7 +53,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     let names = arguments.iter().map(|argument| &argument.name);
     let parse_impl = quote! {
         fn parse<I: std::iter::Iterator<Item = std::string::String>>(
-            mut args: I
+            args: &mut I
         ) -> entrance::Result<Self> {
             Ok(Self {
                 #(
@@ -80,6 +80,72 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
                 )*
             ];
             &ARGS
+        }
+    };
+
+    quote! {
+        #parse_impl
+
+        #spec_impl
+    }
+}
+
+pub fn impl_variable_argument(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+    let fields = match &ast.data {
+        syn::Data::Struct(data) => &data.fields,
+        _ => panic!("Not supported for any type except Struct"),
+    };
+
+    let body = match fields {
+        syn::Fields::Named(fields) => impl_var_args_for_named_fields(fields),
+        _ => panic!("Not supported for any Struct without named fields"),
+    };
+
+    let gen = quote! {
+        impl entrance::VariableArguments for #name {
+            #body
+        }
+    };
+    gen.into()
+}
+
+fn get_single_argument(fields: &syn::FieldsNamed) -> ArgumentItem {
+    let mut fields = fields.named.iter();
+    if let Some(field) = fields.next() {
+        if fields.next().is_none() {
+            return field.try_into().unwrap();
+        }
+    }
+    panic!("The derive macro for VariableArguments supports only a struct with a single field");
+}
+
+fn impl_var_args_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
+    let argument = get_single_argument(fields);
+
+    let name = &argument.name;
+    let parse_impl = quote! {
+        fn parse<I: std::iter::Iterator<Item = std::string::String>>(
+            args: &mut I
+        ) -> entrance::Result<Self> {
+            let mut items = std::vec::Vec::new();
+            for arg in args {
+                items.push(arg.parse()?);
+            }
+            Ok(Self {
+                #name: items.into()
+            })
+        }
+    };
+
+    let name = argument.name;
+    let description = argument.description;
+    let spec_impl = quote! {
+        fn spec() -> std::option::Option<entrance::Arg> {
+            Some(entrance::Arg {
+                name: stringify!(#name),
+                description: #description,
+            })
         }
     };
 

@@ -1,17 +1,18 @@
 use crate::Result;
-use crate::{Arguments, OptionItem, Options};
+use crate::{Arguments, OptionItem, Options, VariableArguments};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 
 /// A struct containing parsed options and arguments.
 #[derive(Debug)]
-pub struct Command<Opts, Args> {
+pub struct Command<Opts, Args, VarArgs> {
     name: String,
     options: Opts,
     args: Args,
+    var_args: VarArgs,
 }
 
-impl<Opts, Args> Command<Opts, Args> {
+impl<Opts, Args, VarArgs> Command<Opts, Args, VarArgs> {
     pub fn new(name: &str) -> CommandPrecursor<Self> {
         CommandPrecursor {
             name: name.to_string(),
@@ -31,7 +32,11 @@ impl<Opts, Args> Command<Opts, Args> {
         &self.args
     }
 
-    pub fn help(&self) -> HelpDisplay<Opts, Args> {
+    pub fn variable_argument(&self) -> &VarArgs {
+        &self.var_args
+    }
+
+    pub fn help(&self) -> HelpDisplay<Opts, Args, VarArgs> {
         HelpDisplay::new(&self.name)
     }
 }
@@ -43,19 +48,23 @@ pub struct CommandPrecursor<Command> {
     _phantom: PhantomData<Command>,
 }
 
-impl<Opts, Args> CommandPrecursor<Command<Opts, Args>>
+impl<Opts, Args, VarArgs> CommandPrecursor<Command<Opts, Args, VarArgs>>
 where
     Opts: Options,
     Args: Arguments,
+    VarArgs: VariableArguments,
 {
-    pub fn parse<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args>> {
+    pub fn parse<I: Iterator<Item = String>>(
+        self,
+        args: I,
+    ) -> Result<Command<Opts, Args, VarArgs>> {
         Ok(self.parse_options(args)?.parse_arguments()?)
     }
 
     pub fn parse_options<I: Iterator<Item = String>>(
         self,
         args: I,
-    ) -> Result<OptionParsedCommand<Peekable<I>, Opts, Args>> {
+    ) -> Result<OptionParsedCommand<Peekable<I>, Opts, Args, VarArgs>> {
         let mut args = args.peekable();
         let _program_name = args.next();
         Ok(OptionParsedCommand {
@@ -71,14 +80,14 @@ where
 ///
 /// This `struct` is created by `parse_option` method on `CommandPrecursor`.
 #[derive(Debug)]
-pub struct OptionParsedCommand<I, Opts, Args> {
+pub struct OptionParsedCommand<I, Opts, Args, VarArgs> {
     name: String,
     iter: I,
     options: Opts,
-    _phantom: PhantomData<Args>,
+    _phantom: PhantomData<(Args, VarArgs)>,
 }
 
-impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args> {
+impl<I, Opts, Args, VarArgs> OptionParsedCommand<I, Opts, Args, VarArgs> {
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -87,20 +96,23 @@ impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args> {
         &self.options
     }
 
-    pub fn help(&self) -> HelpDisplay<Opts, Args> {
+    pub fn help(&self) -> HelpDisplay<Opts, Args, VarArgs> {
         HelpDisplay::new(&self.name)
     }
 
     /// parse the other arguments.
-    pub fn parse_arguments(self) -> Result<Command<Opts, Args>>
+    pub fn parse_arguments(self) -> Result<Command<Opts, Args, VarArgs>>
     where
         I: Iterator<Item = String>,
         Args: Arguments,
+        VarArgs: VariableArguments,
     {
+        let mut iter = self.iter;
         Ok(Command {
             name: self.name,
             options: self.options,
-            args: Args::parse(self.iter)?,
+            args: Args::parse(&mut iter)?,
+            var_args: VarArgs::parse(&mut iter)?,
         })
     }
 }
@@ -130,18 +142,19 @@ fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<Optio
 
 /// Helper struct for printing help messages with `format!` and `{}`.
 #[derive(Debug)]
-pub struct HelpDisplay<'a, Opts, Args>(&'a str, PhantomData<Opts>, PhantomData<Args>);
+pub struct HelpDisplay<'a, Opts, Args, VarArgs>(&'a str, PhantomData<(Opts, Args, VarArgs)>);
 
-impl<'a, Opts, Args> HelpDisplay<'a, Opts, Args> {
+impl<'a, Opts, Args, VarArgs> HelpDisplay<'a, Opts, Args, VarArgs> {
     fn new(name: &'a str) -> Self {
-        Self(name, PhantomData, PhantomData)
+        Self(name, PhantomData)
     }
 }
 
-impl<'a, Opts, Args> std::fmt::Display for HelpDisplay<'a, Opts, Args>
+impl<'a, Opts, Args, VarArgs> std::fmt::Display for HelpDisplay<'a, Opts, Args, VarArgs>
 where
     Opts: Options,
     Args: Arguments,
+    VarArgs: VariableArguments,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         const SPACER: &str = "    ";
@@ -154,14 +167,23 @@ where
         for arg in Args::spec() {
             write!(f, " <{}>", arg.name)?;
         }
+        if let Some(args) = VarArgs::spec() {
+            write!(f, " [{}]...", args.name)?;
+        }
         writeln!(f)?;
 
         format_options(f, SPACER, Opts::spec())?;
 
-        if let Some(longest_length) = Args::spec().iter().map(|arg| arg.name.len()).max() {
+        let var_args_spec = VarArgs::spec();
+        if let Some(longest_length) = Args::spec()
+            .iter()
+            .chain(&var_args_spec)
+            .map(|arg| arg.name.len())
+            .max()
+        {
             writeln!(f)?;
             writeln!(f, "ARGS:")?;
-            for arg in Args::spec() {
+            for arg in Args::spec().iter().chain(&var_args_spec) {
                 writeln!(
                     f,
                     "{spacer}{:<width$}{spacer}{}",
@@ -229,7 +251,7 @@ mod tests {
     }
 
     impl Arguments for Args {
-        fn parse<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
+        fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self> {
             Ok(Self {
                 arg1: args.next().unwrap().parse()?,
                 arg2: args.next().unwrap().parse()?,
@@ -259,7 +281,7 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<(), Args> =
+        let command: Command<(), Args, ()> =
             Command::new("sample").parse(args.iter().map(|s| s.to_string()))?;
 
         assert_eq!(command.arguments().arg1, "arg1".to_string());
@@ -274,7 +296,7 @@ mod tests {
 
     #[test]
     fn format_usage() {
-        let usage = HelpDisplay::<(), Args>::new("sample");
+        let usage = HelpDisplay::<(), Args, ()>::new("sample");
         assert_eq!(
             usage.to_string(),
             "\

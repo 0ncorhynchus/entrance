@@ -50,6 +50,10 @@ pub enum OptionItem {
 ///     version: bool,
 /// }
 /// ```
+///
+/// # Limitation
+/// The derive macro for `Options` supports only a struct with named fields.
+/// Additionally, only `bool` is supported for the type of these fields.
 pub trait Options: Sized {
     fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Result<Self>;
 

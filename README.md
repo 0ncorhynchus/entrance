@@ -27,9 +27,8 @@ struct Opts {
 }
 
 fn main() {
-    let command: Command<Opts, ()> = Command::new(env!("CARGO_PKG_NAME"))
-        .parse(args())
-        .unwrap();
+    let command: Command<Opts, (), ()> =
+        Command::new(env!("CARGO_PKG_NAME")).parse(args()).unwrap();
 
     if command.options().help {
         println!("{}", command.help());
@@ -66,3 +65,9 @@ Limitation: the macro supports only the struct with `bool` members.
 A derive macro is available for this.
 
 Limitation: the macro supports only the struct with members implementing `FromStr`.
+
+### VariableArguments
+
+A derive macro is available for this.
+
+Limitation: the macro supports only the struct with a single member implementing `From<Vec<T: FromStr>>`.
