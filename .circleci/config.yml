@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run: cargo check
       - save_cache:
-          key: cargo-lock-{{ .BuildNum }}
+          key: cargo-lock-{{ .Revision }}
           paths:
             - Cargo.lock
             - target
@@ -17,7 +17,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: cargo-lock-{{ .BuildNum }}
+          key: cargo-lock-{{ .Revision }}
       - run: cargo build
   fmt:
     docker:
@@ -25,7 +25,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: cargo-lock-{{ .BuildNum }}
+          key: cargo-lock-{{ .Revision }}
       - run: rustup component add rustfmt
       - run: cargo fmt -- --check
   lint:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: cargo-lock-{{ .BuildNum }}
+          key: cargo-lock-{{ .Revision }}
       - run: rustup component add clippy
       - run: cargo clippy
   test:
@@ -43,7 +43,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: cargo-lock-{{ .BuildNum }}
+          key: cargo-lock-{{ .Revision }}
       - run: cargo test
   deploy:
     docker:
@@ -51,7 +51,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: cargo-lock-{{ .BuildNum }}
+          key: cargo-lock-{{ .Revision }}
       - run: cargo login $REGISTRY_LOGIN_API_TOKEN
       - run: cargo package
       - run: cargo publish
