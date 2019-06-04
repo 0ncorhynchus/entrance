@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run: rustup component add clippy rustfmt
       - run: cargo fmt -- --check
-      - run: cargo clippy -- -D wranings
+      - run: cargo clippy -- -D warnings
       - run: cargo test
   deploy_entrance:
     docker:
@@ -28,7 +28,7 @@ jobs:
           command: cargo fmt -- --check
           working_directory: entrance_derive
       - run:
-          command: cargo clippy -- -D wranings
+          command: cargo clippy -- -D warnings
           working_directory: entrance_derive
       - run:
           command: cargo test
