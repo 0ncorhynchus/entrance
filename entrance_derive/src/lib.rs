@@ -20,7 +20,7 @@ pub fn options_derive(input: TokenStream) -> TokenStream {
 fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
     attrs
         .iter()
-        .filter_map(|attr| attr.interpret_meta())
+        .filter_map(syn::Attribute::interpret_meta)
         .filter_map(|meta| {
             if let syn::Meta::NameValue(name_value) = meta {
                 Some(name_value)
