@@ -168,6 +168,7 @@ workflows:
             - check
           filters:
             tags:
+              only: /.*/
       - lint-derive:
           requires:
             - check-derive
