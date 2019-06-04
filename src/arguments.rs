@@ -62,15 +62,32 @@ impl Arguments for () {
     }
 }
 
+pub trait VariableArgument: Sized {
+    fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self>;
+
+    /// This associated function is for `HelpDisplay`.
+    fn spec() -> Option<Arg>;
+}
+
+impl VariableArgument for () {
+    fn parse<I: Iterator<Item = String>>(_args: &mut I) -> Result<Self> {
+        Ok(())
+    }
+
+    fn spec() -> Option<Arg> {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn parse() -> Result<()> {
+    fn arguments_parse() -> Result<()> {
         let args = ["arg1", "123", "path/to/file"];
         let mut args = args.iter().map(|s| s.to_string());
-        let _ = <()>::parse(&mut args)?;
+        let _ = <() as Arguments>::parse(&mut args)?;
 
         assert_eq!(args.next(), Some("arg1".to_string()));
 
@@ -78,7 +95,23 @@ mod tests {
     }
 
     #[test]
-    fn spec() {
-        assert_eq!(<()>::spec().len(), 0);
+    fn arguments_spec() {
+        assert_eq!(<() as Arguments>::spec().len(), 0);
+    }
+
+    #[test]
+    fn variable_argument_parse() -> Result<()> {
+        let args = ["arg1", "123", "path/to/file"];
+        let mut args = args.iter().map(|s| s.to_string());
+        let _ = <() as VariableArgument>::parse(&mut args)?;
+
+        assert_eq!(args.next(), Some("arg1".to_string()));
+
+        Ok(())
+    }
+
+    #[test]
+    fn variable_argument_spec() {
+        assert!(<() as VariableArgument>::spec().is_none());
     }
 }
