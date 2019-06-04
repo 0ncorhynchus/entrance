@@ -1,16 +1,34 @@
 version: 2
 jobs:
+  check:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run: cargo check
   build:
     docker:
       - image: rust
-
     steps:
       - checkout
-
-      - run:
-          name: build
-          command: cargo build
-
-      - run:
-          name: test
-          command: cargo test
+      - run: cargo build
+  test:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run: cargo test
+  fmt:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run: rustup component add rustfmt
+      - run: cargo fmt
+  lint:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run: rustup component add clippy
+      - run: cargo clippy
