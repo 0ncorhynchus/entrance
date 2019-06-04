@@ -45,6 +45,10 @@ pub struct Arg {
 ///     file: PathBuf,
 /// }
 /// ```
+///
+/// # Limitation
+/// The derive macro for `Arguments` supports only a struct with named fields.
+/// Additionally, these fields should implement `FromStr`.
 pub trait Arguments: Sized {
     fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self>;
 
@@ -62,6 +66,23 @@ impl Arguments for () {
     }
 }
 
+/// A trait for parsing and containing variable arguments.
+///
+/// # Example
+/// ```
+/// use entrance::VariableArguments;
+/// use std::path::PathBuf;
+///
+/// #[derive(VariableArguments)]
+/// struct VarArgs {
+///     #[description = "List of files"]
+///     files: Vec<PathBuf>,
+/// }
+/// ```
+///
+/// # Limitation
+/// The derive macro for `VariableArguments` supports only a struct with a single named field.
+/// Additionally, this field should implement `From<Vec<T>>` where `T` implements `FromStr`.
 pub trait VariableArguments: Sized {
     fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self>;
 
