@@ -16,7 +16,7 @@ struct Opts {
 }
 
 fn main() {
-    let command: Command<Opts, Args> = match Command::new("sample").parse(env::args()) {
+    let command: Command<Opts, Args, ()> = match Command::new("sample").parse(env::args()) {
         Ok(args) => args,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
