@@ -11,6 +11,19 @@ jobs:
           paths:
             - Cargo.lock
             - target
+  check-derive:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run:
+          command: cargo check
+          working_directory: entrance_derive
+      - save_cache:
+          key: derive-cargo-lock-{{ .Revision }}
+          paths:
+            - entrance_derive/Cargo.lock
+            - entrance_derive/target
   build:
     docker:
       - image: rust
@@ -19,6 +32,16 @@ jobs:
       - restore_cache:
           key: cargo-lock-{{ .Revision }}
       - run: cargo build
+  build-derive:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - restore_cache:
+          key: derive-cargo-lock-{{ .Revision }}
+      - run:
+          command: cargo build
+          working_directory: entrance_derive
   fmt:
     docker:
       - image: rust
@@ -28,6 +51,17 @@ jobs:
           key: cargo-lock-{{ .Revision }}
       - run: rustup component add rustfmt
       - run: cargo fmt -- --check
+  fmt-derive:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - restore_cache:
+          key: derive-cargo-lock-{{ .Revision }}
+      - run: rustup component add rustfmt
+      - run:
+          command: cargo fmt -- --check
+          working_directory: entrance_derive
   lint:
     docker:
       - image: rust
@@ -37,6 +71,17 @@ jobs:
           key: cargo-lock-{{ .Revision }}
       - run: rustup component add clippy
       - run: cargo clippy
+  lint-derive:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - restore_cache:
+          key: derive-cargo-lock-{{ .Revision }}
+      - run: rustup component add clippy
+      - run:
+          command: cargo clippy
+          working_directory: entrance_derive
   test:
     docker:
       - image: rust
@@ -45,6 +90,16 @@ jobs:
       - restore_cache:
           key: cargo-lock-{{ .Revision }}
       - run: cargo test
+  test-derive:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - restore_cache:
+          key: derive-cargo-lock-{{ .Revision }}
+      - run:
+          command: cargo test
+          working_directory: entrance_derive
   deploy:
     docker:
       - image: rust
@@ -55,6 +110,22 @@ jobs:
       - run: cargo login $REGISTRY_LOGIN_API_TOKEN
       - run: cargo package
       - run: cargo publish
+  deploy-derive:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - restore_cache:
+          key: derive-cargo-lock-{{ .Revision }}
+      - run:
+          command: cargo login $REGISTRY_LOGIN_API_TOKEN
+          working_directory: entrance_derive
+      - run:
+          command: cargo package
+          working_directory: entrance_derive
+      - run:
+          command: cargo publish
+          working_directory: entrance_derive
 
 workflows:
   version: 2
@@ -64,9 +135,19 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - check-derive:
+          filters:
+            tags:
+              only: /.*/
       - build:
           requires:
             - check
+          filters:
+            tags:
+              only: /.*/
+      - build-derive:
+          requires:
+            - check-derive
           filters:
             tags:
               only: /.*/
@@ -76,15 +157,33 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - fmt-derive:
+          requires:
+            - check-derive
+          filters:
+            tags:
+              only: /.*/
       - lint:
           requires:
             - check
           filters:
             tags:
+      - lint-derive:
+          requires:
+            - check-derive
+          filters:
+            tags:
+              only: /.*/
               only: /.*/
       - test:
           requires:
             - check
+          filters:
+            tags:
+              only: /.*/
+      - test-derive:
+          requires:
+            - check-derive
           filters:
             tags:
               only: /.*/
@@ -94,6 +193,18 @@ workflows:
             - fmt
             - lint
             - test
+            - deploy-derive
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+){2}$/
+            branches:
+              ignore: /.*/
+      - deploy-derive:
+          requires:
+            - build-derive
+            - fmt-derive
+            - lint-derive
+            - test-derive
           filters:
             tags:
               only: /^v[0-9]+(\.[0-9]+){2}$/
