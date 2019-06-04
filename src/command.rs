@@ -1,5 +1,5 @@
 use crate::Result;
-use crate::{Arguments, OptionItem, Options, VariableArgument};
+use crate::{Arguments, OptionItem, Options, VariableArguments};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 
@@ -52,7 +52,7 @@ impl<Opts, Args, VarArg> CommandPrecursor<Command<Opts, Args, VarArg>>
 where
     Opts: Options,
     Args: Arguments,
-    VarArg: VariableArgument,
+    VarArg: VariableArguments,
 {
     pub fn parse<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args, VarArg>> {
         Ok(self.parse_options(args)?.parse_arguments()?)
@@ -102,7 +102,7 @@ impl<I, Opts, Args, VarArg> OptionParsedCommand<I, Opts, Args, VarArg> {
     where
         I: Iterator<Item = String>,
         Args: Arguments,
-        VarArg: VariableArgument,
+        VarArg: VariableArguments,
     {
         let mut iter = self.iter;
         Ok(Command {
@@ -151,7 +151,7 @@ impl<'a, Opts, Args, VarArg> std::fmt::Display for HelpDisplay<'a, Opts, Args, V
 where
     Opts: Options,
     Args: Arguments,
-    VarArg: VariableArgument,
+    VarArg: VariableArguments,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         const SPACER: &str = "    ";

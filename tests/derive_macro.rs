@@ -1,4 +1,4 @@
-use entrance::{Arguments, OptionItem, Options, VariableArgument};
+use entrance::{Arguments, OptionItem, Options, VariableArguments};
 use std::path::PathBuf;
 
 #[test]
@@ -56,7 +56,7 @@ fn options() -> Result<(), entrance::OptionError> {
 
 #[test]
 fn variable_argument() -> entrance::Result<()> {
-    #[derive(VariableArgument)]
+    #[derive(VariableArguments)]
     struct VarArg {
         files: Vec<PathBuf>,
     }

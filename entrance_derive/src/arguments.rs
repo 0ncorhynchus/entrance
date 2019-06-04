@@ -103,7 +103,7 @@ pub fn impl_variable_argument(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let gen = quote! {
-        impl entrance::VariableArgument for #name {
+        impl entrance::VariableArguments for #name {
             #body
         }
     };
@@ -117,7 +117,7 @@ fn get_single_argument(fields: &syn::FieldsNamed) -> ArgumentItem {
             return field.try_into().unwrap();
         }
     }
-    panic!("The derive macro for VariableArgument supports only a struct with a single field");
+    panic!("The derive macro for VariableArguments supports only a struct with a single field");
 }
 
 fn impl_var_arg_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {

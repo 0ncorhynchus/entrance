@@ -28,7 +28,7 @@ struct Opts {
     help: bool,
 }
 
-#[derive(VariableArgument)]
+#[derive(VariableArguments)]
 struct VarArg {
     #[description = "List of files"]
     files: Box<[PathBuf]>,
