@@ -5,7 +5,7 @@ authors = ["Suguru Kato <salmon.bioinformatics@gmail.com>"]
 edition = "2018"
 
 description = "A crate which provides derive macros for the crate entrance"
-repository = "https:://github.com/0ncorhynchus/entrance"
+repository = "https://github.com/0ncorhynchus/entrance"
 license = "MIT"
 
 [lib]
