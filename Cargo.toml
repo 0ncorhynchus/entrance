@@ -4,5 +4,15 @@ version = "0.1.0"
 authors = ["Suguru Kato <salmon.bioinformatics@gmail.com>"]
 edition = "2018"
 
+description = "A command line argument parser library which provides type assisted tools"
+repository = "https:://github.com/0ncorhynchus/entrance"
+documentation = "https://docs.rs/entrance"
+readme = "README.md"
+
+license = "MIT"
+
+[badges]
+circle-ci = { repository = "0ncorhynchus/entrance" }
+
 [dependencies]
 entrance_derive = { path = "./entrance_derive" }
