@@ -32,6 +32,14 @@ jobs:
     steps:
       - checkout
       - run: cargo test
+  deploy:
+    docker:
+      - image: rust
+    steps:
+      - checkout
+      - run: cargo login $REGISTRY_LOGIN_API_TOKEN
+      - run: cargo package
+      - run: cargo publish
 
 workflows:
   version: 2
