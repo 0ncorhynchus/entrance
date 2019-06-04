@@ -40,14 +40,14 @@ impl error::Error for ArgumentError {
 /// }
 /// ```
 pub trait Arguments: Sized {
-    fn parse<I: Iterator<Item = String>>(args: I) -> Result<Self>;
+    fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Arg];
 }
 
 impl Arguments for () {
-    fn parse<I: Iterator<Item = String>>(_args: I) -> Result<Self> {
+    fn parse<I: Iterator<Item = String>>(_args: &mut I) -> Result<Self> {
         Ok(())
     }
 

@@ -97,10 +97,11 @@ impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args> {
         I: Iterator<Item = String>,
         Args: Arguments,
     {
+        let mut iter = self.iter;
         Ok(Command {
             name: self.name,
             options: self.options,
-            args: Args::parse(self.iter)?,
+            args: Args::parse(&mut iter)?,
         })
     }
 }
@@ -229,7 +230,7 @@ mod tests {
     }
 
     impl Arguments for Args {
-        fn parse<I: Iterator<Item = String>>(mut args: I) -> Result<Self> {
+        fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self> {
             Ok(Self {
                 arg1: args.next().unwrap().parse()?,
                 arg2: args.next().unwrap().parse()?,

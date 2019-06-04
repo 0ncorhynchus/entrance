@@ -53,7 +53,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     let names = arguments.iter().map(|argument| &argument.name);
     let parse_impl = quote! {
         fn parse<I: std::iter::Iterator<Item = std::string::String>>(
-            mut args: I
+            args: &mut I
         ) -> entrance::Result<Self> {
             Ok(Self {
                 #(

@@ -11,7 +11,7 @@ fn struct_with_named_fields() -> entrance::Result<()> {
     }
 
     let args = ["arg1", "123", "path/to/file"];
-    let result = Args::parse(args.iter().map(|s| s.to_string()))?;
+    let result = Args::parse(&mut args.iter().map(|s| s.to_string()))?;
 
     assert_eq!(result.arg1, "arg1".to_string());
     assert_eq!(result.arg2, 123);
