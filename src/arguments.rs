@@ -23,6 +23,12 @@ impl error::Error for ArgumentError {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Arg {
+    pub name: &'static str,
+    pub description: &'static str,
+}
+
 /// A trait for parsing and containing arguments.
 ///
 /// # Example
@@ -54,12 +60,6 @@ impl Arguments for () {
     fn spec() -> &'static [Arg] {
         &[]
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Arg {
-    pub name: &'static str,
-    pub description: &'static str,
 }
 
 #[cfg(test)]
