@@ -15,4 +15,4 @@ license = "MIT"
 circle-ci = { repository = "0ncorhynchus/entrance" }
 
 [dependencies]
-entrance_derive = { path = "./entrance_derive" }
+entrance_derive = { path = "./entrance_derive", version = "0.1" }

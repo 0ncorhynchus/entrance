@@ -1,4 +1,5 @@
 /target
+/entrance_derive/target
 **/*.rs.bk
 Cargo.lock
 **/.*.swp
