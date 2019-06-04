@@ -98,7 +98,7 @@ pub fn impl_variable_argument(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let body = match fields {
-        syn::Fields::Named(fields) => impl_var_arg_for_named_fields(fields),
+        syn::Fields::Named(fields) => impl_var_args_for_named_fields(fields),
         _ => panic!("Not supported for any Struct without named fields"),
     };
 
@@ -120,7 +120,7 @@ fn get_single_argument(fields: &syn::FieldsNamed) -> ArgumentItem {
     panic!("The derive macro for VariableArguments supports only a struct with a single field");
 }
 
-fn impl_var_arg_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
+fn impl_var_args_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     let argument = get_single_argument(fields);
 
     let name = &argument.name;
