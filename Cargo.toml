@@ -14,8 +14,14 @@ license = "MIT"
 [badges]
 circle-ci = { repository = "0ncorhynchus/entrance" }
 
-[dependencies]
-entrance_derive = { path = "./entrance_derive", version = "0.1" }
+[dependencies.entrance_derive]
+optional = true
+path = "./entrance_derive"
+version = "0.1"
 
 [workspace]
 members = [".", "entrance_derive"]
+
+[features]
+default = ["derive"]
+derive = ["entrance_derive"]
