@@ -59,7 +59,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
                 #(
                     #names:
                         args.next()
-                            .ok_or(entrance::ArgumentError::InvalidNumberOfArguments)?
+                            .ok_or(entrance::Error::InvalidNumberOfArguments)?
                             .parse()?,
                 )*
             })

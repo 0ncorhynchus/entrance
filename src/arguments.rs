@@ -1,27 +1,4 @@
 use crate::Result;
-use std::error;
-use std::fmt;
-
-#[derive(Debug)]
-pub enum ArgumentError {
-    InvalidNumberOfArguments,
-}
-
-impl fmt::Display for ArgumentError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ArgumentError::InvalidNumberOfArguments => write!(f, "Invalid number of arguments"),
-        }
-    }
-}
-
-impl error::Error for ArgumentError {
-    fn description(&self) -> &str {
-        match self {
-            ArgumentError::InvalidNumberOfArguments => "Invalid number of arguments",
-        }
-    }
-}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Arg {
