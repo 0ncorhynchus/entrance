@@ -21,7 +21,7 @@ fn struct_with_named_fields() -> entrance::Result<()> {
 }
 
 #[test]
-fn options() -> Result<(), entrance::OptionError> {
+fn options() -> Result<(), entrance::Error> {
     #[derive(Options, Debug, PartialEq)]
     struct Opts {
         verbose: bool,
@@ -44,12 +44,19 @@ fn options() -> Result<(), entrance::OptionError> {
         OptionItem::Long("invalid".to_string()),
     ];
     let opts = Opts::parse(options.into_iter());
-    assert_eq!(
-        opts,
-        Err(entrance::OptionError::InvalidLongOption(
-            "invalid".to_string()
-        ))
-    );
+    match opts {
+        Ok(_) => {
+            panic!("Err(InvalidLongOption(\"invalid\")) is expected.");
+        }
+        Err(error) => match error {
+            entrance::Error::InvalidLongOption(option) => {
+                assert_eq!(option, "invalid".to_string());
+            }
+            _ => {
+                panic!("Err(InvalidLongOption(\"invalid\")) is expected.");
+            }
+        },
+    }
 
     Ok(())
 }
