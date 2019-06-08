@@ -112,7 +112,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
                         #long_option_arms
                     )*
                     _ => {
-                        return Err(entrance::Error::InvalidLongOption(option));
+                        return Err(entrance::Error::InvalidOption);
                     }
                 }
             }
@@ -122,7 +122,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
                         #short_option_arms
                     )*
                     _ => {
-                        return Err(entrance::Error::InvalidShortOption(o));
+                        return Err(entrance::Error::InvalidOption);
                     }
                 }
             }

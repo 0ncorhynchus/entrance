@@ -35,15 +35,8 @@ pub trait Options: Sized {
 
 impl Options for () {
     fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
-        if let Some(option) = options.next() {
-            match option {
-                OptionItem::Long(option) => {
-                    return Err(Error::InvalidLongOption(option));
-                }
-                OptionItem::Short(o) => {
-                    return Err(Error::InvalidShortOption(o));
-                }
-            }
+        if options.next().is_some() {
+            return Err(Error::InvalidOption);
         }
         Ok(())
     }
@@ -73,14 +66,12 @@ mod tests {
         let opts = <()>::parse(options.into_iter());
         match opts {
             Ok(_) => {
-                panic!("Err(InvalidLongOption(\"flag1\")) is expected.");
+                panic!("Err(InvalidOption) is expected.");
             }
             Err(error) => match error {
-                Error::InvalidLongOption(option) => {
-                    assert_eq!(option, "flag1".to_string());
-                }
+                Error::InvalidOption => {}
                 _ => {
-                    panic!("Err(InvalidLongOption(\"flag1\")) is expected.");
+                    panic!("Err(InvalidOption) is expected.");
                 }
             },
         }

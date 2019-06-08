@@ -46,14 +46,12 @@ fn options() -> Result<(), entrance::Error> {
     let opts = Opts::parse(options.into_iter());
     match opts {
         Ok(_) => {
-            panic!("Err(InvalidLongOption(\"invalid\")) is expected.");
+            panic!("Err(InvalidOption) is expected.");
         }
         Err(error) => match error {
-            entrance::Error::InvalidLongOption(option) => {
-                assert_eq!(option, "invalid".to_string());
-            }
+            entrance::Error::InvalidOption => {}
             _ => {
-                panic!("Err(InvalidLongOption(\"invalid\")) is expected.");
+                panic!("Err(InvalidOption) is expected.");
             }
         },
     }
