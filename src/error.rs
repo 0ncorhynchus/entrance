@@ -5,12 +5,12 @@ pub enum Error {
     InvalidNumberOfArguments,
     InvalidLongOption(String),
     InvalidShortOption(char),
-    Others(Box<dyn std::error::Error>),
+    ParseError(Box<dyn std::error::Error>),
 }
 
 impl<T: 'static + std::error::Error> From<T> for Error {
     fn from(error: T) -> Self {
-        Error::Others(Box::new(error))
+        Error::ParseError(Box::new(error))
     }
 }
 
@@ -20,7 +20,7 @@ impl fmt::Display for Error {
             Error::InvalidNumberOfArguments => write!(f, "Invalid number of arguments"),
             Error::InvalidLongOption(option) => write!(f, "Invalid option: --{}", option),
             Error::InvalidShortOption(option) => write!(f, "Invalid option: -{}", option),
-            Error::Others(error) => error.fmt(f),
+            Error::ParseError(error) => error.fmt(f),
         }
     }
 }
