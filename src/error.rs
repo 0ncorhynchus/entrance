@@ -4,12 +4,12 @@ use std::fmt;
 pub enum Error {
     InvalidNumberOfArguments,
     InvalidOption,
-    ParseError(Box<dyn std::error::Error>),
+    ParseError(failure::Error),
 }
 
-impl<T: 'static + std::error::Error> From<T> for Error {
+impl<T: failure::Fail> From<T> for Error {
     fn from(error: T) -> Self {
-        Error::ParseError(Box::new(error))
+        Error::ParseError(error.into())
     }
 }
 
