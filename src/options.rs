@@ -1,32 +1,4 @@
-use std::error;
-use std::fmt;
-
-type Result<T> = std::result::Result<T, OptionError>;
-
-#[derive(Debug, PartialEq)]
-pub enum OptionError {
-    InvalidShortOption(char),
-    InvalidLongOption(String),
-}
-
-impl fmt::Display for OptionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            OptionError::InvalidShortOption(flag) => write!(f, "Invalid option: -{}", flag),
-            OptionError::InvalidLongOption(flag) => write!(f, "Invalid option: --{}", flag),
-        }
-    }
-}
-
-impl error::Error for OptionError {
-    fn description(&self) -> &str {
-        match self {
-            OptionError::InvalidShortOption(_) | OptionError::InvalidLongOption(_) => {
-                "Invalid option"
-            }
-        }
-    }
-}
+use crate::{ErrorKind, Result};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum OptionItem {
@@ -63,15 +35,8 @@ pub trait Options: Sized {
 
 impl Options for () {
     fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
-        if let Some(option) = options.next() {
-            match option {
-                OptionItem::Long(option) => {
-                    return Err(OptionError::InvalidLongOption(option));
-                }
-                OptionItem::Short(o) => {
-                    return Err(OptionError::InvalidShortOption(o));
-                }
-            }
+        if options.next().is_some() {
+            return Err(ErrorKind::InvalidOption.into());
         }
         Ok(())
     }
@@ -99,10 +64,18 @@ mod tests {
             OptionItem::Short('2'),
         ];
         let opts = <()>::parse(options.into_iter());
-        assert_eq!(
-            opts,
-            Err(OptionError::InvalidLongOption("flag1".to_string()))
-        );
+        match opts {
+            Ok(_) => {
+                panic!("Err variant is expected.");
+            }
+            Err(error) => match error.kind() {
+                ErrorKind::InvalidOption => {}
+                _ => {
+                    panic!("ErrorKind::InvalidOption is expected.");
+                }
+            },
+        }
+
         Ok(())
     }
 

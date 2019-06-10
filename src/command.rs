@@ -241,7 +241,7 @@ fn format_options(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Arg;
+    use crate::{parse_argument, Arg};
     use std::path::PathBuf;
 
     struct Args {
@@ -253,9 +253,9 @@ mod tests {
     impl Arguments for Args {
         fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self> {
             Ok(Self {
-                arg1: args.next().unwrap().parse()?,
-                arg2: args.next().unwrap().parse()?,
-                arg3: args.next().unwrap().parse()?,
+                arg1: parse_argument(args.next().unwrap())?,
+                arg2: parse_argument(args.next().unwrap())?,
+                arg3: parse_argument(args.next().unwrap())?,
             })
         }
 

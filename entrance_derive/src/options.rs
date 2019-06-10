@@ -112,7 +112,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
                         #long_option_arms
                     )*
                     _ => {
-                        return Err(entrance::OptionError::InvalidLongOption(option));
+                        return Err(entrance::ErrorKind::InvalidOption.into());
                     }
                 }
             }
@@ -122,7 +122,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
                         #short_option_arms
                     )*
                     _ => {
-                        return Err(entrance::OptionError::InvalidShortOption(o));
+                        return Err(entrance::ErrorKind::InvalidOption.into());
                     }
                 }
             }
@@ -133,7 +133,7 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     let parse_impl = quote! {
         fn parse<I: std::iter::Iterator<Item = entrance::OptionItem>>(
             mut options: I,
-        ) -> std::result::Result<Self, entrance::OptionError> {
+        ) -> std::result::Result<Self, entrance::Error> {
             #declare_lines
 
             for option in options {

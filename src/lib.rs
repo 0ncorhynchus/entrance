@@ -54,12 +54,28 @@
 
 mod arguments;
 mod command;
+mod error;
 mod options;
 
 pub use crate::arguments::*;
 pub use crate::command::*;
+pub use crate::error::*;
 pub use crate::options::*;
 pub use entrance_derive::*;
-use std::error;
 
-pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+use failure::{Fail, ResultExt};
+
+/// A helper function to parse argument
+pub fn parse_argument<T, E>(arg: String) -> Result<T>
+where
+    T: std::str::FromStr<Err = E>,
+    E: Fail,
+{
+    // The below code can't be compiled because of failure in type inference
+    //
+    // ```rust
+    // Ok(arg.parse().context(ErrorKind::InvalidNumberOfArguments)?)
+    // ```
+    let result: std::result::Result<T, E> = arg.parse();
+    Ok(result.context(ErrorKind::InvalidNumberOfArguments)?)
+}
