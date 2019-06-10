@@ -46,12 +46,12 @@ fn options() -> Result<(), entrance::Error> {
     let opts = Opts::parse(options.into_iter());
     match opts {
         Ok(_) => {
-            panic!("Err(InvalidOption) is expected.");
+            panic!("Err variant is expected.");
         }
-        Err(error) => match error {
-            entrance::Error::InvalidOption => {}
+        Err(error) => match error.kind() {
+            entrance::ErrorKind::InvalidOption => {}
             _ => {
-                panic!("Err(InvalidOption) is expected.");
+                panic!("ErrorKind::InvalidOption is expected.");
             }
         },
     }

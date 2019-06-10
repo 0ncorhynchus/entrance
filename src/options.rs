@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{ErrorKind, Result};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum OptionItem {
@@ -36,7 +36,7 @@ pub trait Options: Sized {
 impl Options for () {
     fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
         if options.next().is_some() {
-            return Err(Error::InvalidOption);
+            return Err(ErrorKind::InvalidOption.into());
         }
         Ok(())
     }
@@ -66,12 +66,12 @@ mod tests {
         let opts = <()>::parse(options.into_iter());
         match opts {
             Ok(_) => {
-                panic!("Err(InvalidOption) is expected.");
+                panic!("Err variant is expected.");
             }
-            Err(error) => match error {
-                Error::InvalidOption => {}
+            Err(error) => match error.kind() {
+                ErrorKind::InvalidOption => {}
                 _ => {
-                    panic!("Err(InvalidOption) is expected.");
+                    panic!("ErrorKind::InvalidOption is expected.");
                 }
             },
         }

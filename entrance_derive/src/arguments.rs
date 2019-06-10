@@ -50,17 +50,24 @@ fn impl_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
         .map(|field| field.try_into().unwrap())
         .collect();
 
-    let names = arguments.iter().map(|argument| &argument.name);
+    let parse_arms = arguments.iter().map(|argument| {
+        let name = &argument.name;
+        quote! {
+            #name:
+                entrance::parse_argument(
+                    args
+                        .next()
+                        .ok_or(entrance::ErrorKind::InvalidNumberOfArguments)?
+                )?,
+        }
+    });
     let parse_impl = quote! {
         fn parse<I: std::iter::Iterator<Item = std::string::String>>(
             args: &mut I
         ) -> entrance::Result<Self> {
             Ok(Self {
                 #(
-                    #names:
-                        args.next()
-                            .ok_or(entrance::Error::InvalidNumberOfArguments)?
-                            .parse()?,
+                    #parse_arms
                 )*
             })
         }
@@ -123,15 +130,18 @@ fn get_single_argument(fields: &syn::FieldsNamed) -> ArgumentItem {
 fn impl_var_args_for_named_fields(fields: &syn::FieldsNamed) -> impl quote::ToTokens {
     let argument = get_single_argument(fields);
 
+    let items = quote! {
+        let mut items = std::vec::Vec::new();
+        for arg in args {
+            items.push(entrance::parse_argument(arg)?);
+        }
+    };
     let name = &argument.name;
     let parse_impl = quote! {
         fn parse<I: std::iter::Iterator<Item = std::string::String>>(
             args: &mut I
         ) -> entrance::Result<Self> {
-            let mut items = std::vec::Vec::new();
-            for arg in args {
-                items.push(arg.parse()?);
-            }
+            #items
             Ok(Self {
                 #name: items.into()
             })
