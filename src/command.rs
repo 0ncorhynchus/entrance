@@ -48,10 +48,7 @@ where
     Opts: Options,
     Args: Arguments,
 {
-    pub fn parse<I: Iterator<Item = String>>(
-        self,
-        args: I,
-    ) -> Result<Command<Opts, Args>> {
+    pub fn parse<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args>> {
         Ok(self.parse_options(args)?.parse_arguments()?)
     }
 
