@@ -31,7 +31,7 @@
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<Opts, Args, ()>::new("program").parse_options(args).unwrap();
+//! let command = Command::<Opts, Args>::new("program").parse_options(args).unwrap();
 //!
 //! if command.options().version {
 //!     // Print version information and exit.

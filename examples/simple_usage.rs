@@ -12,7 +12,7 @@ struct Opts {
 }
 
 fn main() {
-    let command: Command<Opts, (), ()> =
+    let command: Command<Opts, ()> =
         Command::new(env!("CARGO_PKG_NAME")).parse(args()).unwrap();
 
     if command.options().help {

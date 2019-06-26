@@ -1,4 +1,4 @@
-use entrance::{Arguments, OptionItem, Options, VariableArguments};
+use entrance::{Arguments, OptionItem, Options};
 use std::path::PathBuf;
 
 #[test]
@@ -55,24 +55,6 @@ fn options() -> Result<(), entrance::Error> {
             }
         },
     }
-
-    Ok(())
-}
-
-#[test]
-fn variable_argument() -> entrance::Result<()> {
-    #[derive(VariableArguments)]
-    struct VarArg {
-        files: Vec<PathBuf>,
-    }
-
-    let args = ["path/to/file", "./test.txt"];
-    let result = VarArg::parse(&mut args.iter().map(|s| s.to_string()))?;
-
-    assert_eq!(
-        result.files,
-        [PathBuf::from("path/to/file"), PathBuf::from("./test.txt")]
-    );
 
     Ok(())
 }
