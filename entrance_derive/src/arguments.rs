@@ -41,7 +41,11 @@ impl<'a> TryFrom<&'a syn::Field> for ArgumentItem<'a> {
         let description = get_description(&name_value_attrs);
         let is_variable = has_attribute("variable_argument", &extract_words(&field.attrs));
 
-        Ok(Self { name, description, is_variable })
+        Ok(Self {
+            name,
+            description,
+            is_variable,
+        })
     }
 }
 
