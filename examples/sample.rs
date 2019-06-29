@@ -12,6 +12,10 @@ struct Args {
 
     #[description = "String argument  (String)"]
     string: String,
+
+    #[description = "File path list   (Vec<PathBuf>)"]
+    #[variable_argument]
+    files: Vec<PathBuf>,
 }
 
 #[derive(Options)]
@@ -28,13 +32,7 @@ struct Opts {
     help: bool,
 }
 
-#[derive(VariableArguments)]
-struct VarArg {
-    #[description = "List of files"]
-    files: Box<[PathBuf]>,
-}
-
-type Command = entrance::Command<Opts, Args, VarArg>;
+type Command = entrance::Command<Opts, Args>;
 
 fn main() {
     let command = match Command::new("sample").parse_options(env::args()) {
@@ -69,8 +67,8 @@ fn main() {
     println!("integer: {}", command.arguments().integer);
     println!("float:   {}", command.arguments().float);
     println!("string:  {}", command.arguments().string);
-    println!("files:");
-    for file in command.variable_argument().files.iter() {
-        println!("    {}", file.display());
+    println!("paths:");
+    for path in &command.arguments().files {
+        println!("    {}", path.display());
     }
 }

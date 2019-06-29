@@ -31,6 +31,9 @@ pub trait Arguments: Sized {
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Arg];
+
+    /// This associated function is for `HelpDisplay`.
+    fn var_spec() -> Option<Arg>;
 }
 
 impl Arguments for () {
@@ -41,38 +44,8 @@ impl Arguments for () {
     fn spec() -> &'static [Arg] {
         &[]
     }
-}
 
-/// A trait for parsing and containing variable arguments.
-///
-/// # Example
-/// ```
-/// use entrance::VariableArguments;
-/// use std::path::PathBuf;
-///
-/// #[derive(VariableArguments)]
-/// struct VarArgs {
-///     #[description = "List of files"]
-///     files: Vec<PathBuf>,
-/// }
-/// ```
-///
-/// # Limitation
-/// The derive macro for `VariableArguments` supports only a struct with a single named field.
-/// Additionally, this field should implement `From<Vec<T>>` where `T` implements `FromStr`.
-pub trait VariableArguments: Sized {
-    fn parse<I: Iterator<Item = String>>(args: &mut I) -> Result<Self>;
-
-    /// This associated function is for `HelpDisplay`.
-    fn spec() -> Option<Arg>;
-}
-
-impl VariableArguments for () {
-    fn parse<I: Iterator<Item = String>>(_args: &mut I) -> Result<Self> {
-        Ok(())
-    }
-
-    fn spec() -> Option<Arg> {
+    fn var_spec() -> Option<Arg> {
         None
     }
 }
@@ -95,21 +68,5 @@ mod tests {
     #[test]
     fn arguments_spec() {
         assert_eq!(<() as Arguments>::spec().len(), 0);
-    }
-
-    #[test]
-    fn variable_argument_parse() -> Result<()> {
-        let args = ["arg1", "123", "path/to/file"];
-        let mut args = args.iter().map(|s| s.to_string());
-        let _ = <() as VariableArguments>::parse(&mut args)?;
-
-        assert_eq!(args.next(), Some("arg1".to_string()));
-
-        Ok(())
-    }
-
-    #[test]
-    fn variable_argument_spec() {
-        assert!(<() as VariableArguments>::spec().is_none());
     }
 }

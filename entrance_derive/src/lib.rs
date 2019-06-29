@@ -5,16 +5,10 @@ mod options;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(Arguments, attributes(description))]
+#[proc_macro_derive(Arguments, attributes(description, variable_argument))]
 pub fn args_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     arguments::impl_arguments(&ast)
-}
-
-#[proc_macro_derive(VariableArguments, attributes(description))]
-pub fn var_args_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
-    arguments::impl_variable_argument(&ast)
 }
 
 #[proc_macro_derive(Options, attributes(description, short))]
@@ -35,6 +29,24 @@ fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
             }
         })
         .collect()
+}
+
+fn extract_words(attrs: &[syn::Attribute]) -> Vec<syn::Ident> {
+    attrs
+        .iter()
+        .filter_map(syn::Attribute::interpret_meta)
+        .filter_map(|meta| {
+            if let syn::Meta::Word(ident) = meta {
+                Some(ident)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn has_attribute(name: &'static str, attrs: &[syn::Ident]) -> bool {
+    attrs.iter().any(|attr| attr == name)
 }
 
 fn get_single_attribute<'a>(
