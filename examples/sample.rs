@@ -1,5 +1,6 @@
 use entrance::*;
 use std::env;
+use std::path::PathBuf;
 
 #[derive(Arguments)]
 struct Args {
@@ -11,6 +12,10 @@ struct Args {
 
     #[description = "String argument  (String)"]
     string: String,
+
+    #[description = "File path list   (Vec<PathBuf>)"]
+    #[variable_argument]
+    files: Vec<PathBuf>,
 }
 
 #[derive(Options)]
@@ -62,4 +67,8 @@ fn main() {
     println!("integer: {}", command.arguments().integer);
     println!("float:   {}", command.arguments().float);
     println!("string:  {}", command.arguments().string);
+    println!("paths:");
+    for path in &command.arguments().files {
+        println!("    {}", path.display());
+    }
 }
