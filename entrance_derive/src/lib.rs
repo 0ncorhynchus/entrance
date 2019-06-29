@@ -31,6 +31,24 @@ fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
         .collect()
 }
 
+fn extract_words(attrs: &[syn::Attribute]) -> Vec<syn::Ident> {
+    attrs
+        .iter()
+        .filter_map(syn::Attribute::interpret_meta)
+        .filter_map(|meta| {
+            if let syn::Meta::Word(ident) = meta {
+                Some(ident)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn has_attribute(name: &'static str, attrs: &[syn::Ident]) -> bool {
+    attrs.iter().any(|attr| attr == name)
+}
+
 fn get_single_attribute<'a>(
     name: &'static str,
     attrs: &'a [syn::MetaNameValue],
