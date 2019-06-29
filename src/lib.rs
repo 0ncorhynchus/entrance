@@ -74,8 +74,24 @@ where
     // The below code can't be compiled because of failure in type inference
     //
     // ```rust
-    // Ok(arg.parse().context(ErrorKind::InvalidNumberOfArguments)?)
+    // Ok(arg.parse().context(ErrorKind::ParseError)?)
     // ```
     let result: std::result::Result<T, E> = arg.parse();
-    Ok(result.context(ErrorKind::InvalidNumberOfArguments)?)
+    Ok(result.context(ErrorKind::ParseError)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_argument() {
+        let parsed: Result<f64> = parse_argument("1.0".to_string());
+        assert!(parsed.is_ok());
+        assert_eq!(parsed.unwrap(), 1.0);
+
+        let parsed: Result<f64> = parse_argument("not float number".to_string());
+        assert!(parsed.is_err());
+        assert_eq!(parsed.unwrap_err().kind(), ErrorKind::ParseError);
+    }
 }
