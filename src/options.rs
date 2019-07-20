@@ -1,6 +1,7 @@
 use crate::{ErrorKind, Result};
 
 #[derive(Debug, PartialEq, Eq)]
+#[doc(hidden)]
 pub enum OptionItem {
     Long(String),
     Short(char),
