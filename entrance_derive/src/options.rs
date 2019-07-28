@@ -102,11 +102,15 @@ impl Parse for OptionsInput {
         let lookahead = input.lookahead1();
         if lookahead.peek(Token![struct]) {
             let content;
+            let struct_token = input.parse()?;
+            let ident = input.parse()?;
+            let brace_token = braced!(content in input);
+            let fields = content.parse_terminated(OptionField::parse)?;
             Ok(Self {
-                _struct_token: input.parse()?,
-                ident: input.parse()?,
-                _brace_token: braced!(content in input),
-                fields: content.parse_terminated(OptionField::parse)?,
+                _struct_token: struct_token,
+                ident,
+                _brace_token: brace_token,
+                fields,
             })
         } else {
             Err(lookahead.error())

@@ -94,11 +94,15 @@ impl Parse for ArgumentsInput {
         let lookahead = input.lookahead1();
         if lookahead.peek(Token![struct]) {
             let content;
+            let struct_token = input.parse()?;
+            let ident = input.parse()?;
+            let brace_token = braced!(content in input);
+            let fields = content.parse()?;
             Ok(ArgumentsInput {
-                _struct_token: input.parse()?,
-                ident: input.parse()?,
-                _brace_token: braced!(content in input),
-                fields: content.parse()?,
+                _struct_token: struct_token,
+                ident,
+                _brace_token: brace_token,
+                fields,
             })
         } else {
             Err(lookahead.error())
@@ -132,7 +136,7 @@ impl Parse for ArgumentFields {
             prev_variable = field
                 .attrs
                 .iter()
-                .filter(|attr| {
+                .find(|attr| {
                     if let Some(meta) = attr.interpret_meta() {
                         if let syn::Meta::Word(ident) = meta {
                             return ident == "variable_argument";
@@ -140,7 +144,6 @@ impl Parse for ArgumentFields {
                     }
                     false
                 })
-                .next()
                 .cloned();
 
             arguments.push(Field {
