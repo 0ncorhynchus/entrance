@@ -14,9 +14,9 @@ pub fn args_derive(tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(Options, attributes(description, short))]
-pub fn options_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
-    options::impl_options(&ast)
+pub fn options_derive(tokens: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(tokens as options::OptionsInput);
+    input.gen()
 }
 
 fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
