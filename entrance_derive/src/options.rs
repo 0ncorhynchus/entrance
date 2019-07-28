@@ -170,4 +170,3 @@ fn option_to_tokens<T: quote::ToTokens>(x: Option<T>) -> impl quote::ToTokens {
         },
     }
 }
-
