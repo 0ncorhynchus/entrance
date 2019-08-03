@@ -1,20 +1,22 @@
+#![recursion_limit = "128"]
 extern crate proc_macro;
 
 mod arguments;
 mod options;
 
 use proc_macro::TokenStream;
+use syn::parse_macro_input;
 
 #[proc_macro_derive(Arguments, attributes(description, variable_argument))]
-pub fn args_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
-    arguments::impl_arguments(&ast)
+pub fn args_derive(tokens: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(tokens as arguments::ArgumentsInput);
+    input.gen()
 }
 
 #[proc_macro_derive(Options, attributes(description, short))]
-pub fn options_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
-    options::impl_options(&ast)
+pub fn options_derive(tokens: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(tokens as options::OptionsInput);
+    input.gen()
 }
 
 fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
@@ -29,24 +31,6 @@ fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
             }
         })
         .collect()
-}
-
-fn extract_words(attrs: &[syn::Attribute]) -> Vec<syn::Ident> {
-    attrs
-        .iter()
-        .filter_map(syn::Attribute::interpret_meta)
-        .filter_map(|meta| {
-            if let syn::Meta::Word(ident) = meta {
-                Some(ident)
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-fn has_attribute(name: &'static str, attrs: &[syn::Ident]) -> bool {
-    attrs.iter().any(|attr| attr == name)
 }
 
 fn get_single_attribute<'a>(
