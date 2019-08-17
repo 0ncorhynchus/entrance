@@ -1,24 +1,19 @@
 use entrance::*;
 use std::env::args;
 
-#[derive(Options)]
-struct Opts {
-    #[description = "Print the usage"]
-    #[short = 'h']
-    help: bool,
-
-    #[description = "Print the version"]
-    version: bool,
-}
-
 fn main() {
-    let command: Command<Opts, ()> = Command::new(env!("CARGO_PKG_NAME")).parse(args()).unwrap();
+    let command: Command<DefaultInformativeOption, (), ()> =
+        Command::new(env!("CARGO_PKG_NAME")).parse(args()).unwrap();
 
-    if command.options().help {
-        println!("{}", command.help());
-    }
-
-    if command.options().version {
-        println!("{} {}", command.name(), env!("CARGO_PKG_VERSION"));
+    match command.call_type() {
+        CallType::Informative(info_opt) => match info_opt {
+            DefaultInformativeOption::Help => {
+                println!("{}", command.help());
+            }
+            DefaultInformativeOption::Version => {
+                println!("{} {}", command.name(), env!("CARGO_PKG_VERSION"));
+            }
+        },
+        _ => {}
     }
 }

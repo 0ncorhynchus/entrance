@@ -1,17 +1,22 @@
 use crate::Result;
-use crate::{Arguments, OptionItem, Options};
+use crate::{Arguments, InformativeOption, OptionItem, Options};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 
-/// A struct containing parsed options and arguments.
-#[derive(Debug)]
-pub struct Command<Opts, Args> {
-    name: String,
-    options: Opts,
-    args: Args,
+#[derive(Debug, PartialEq)]
+pub enum CallType<InfoOpt, Opts, Args> {
+    Informative(InfoOpt),
+    Normal(Opts, Args),
 }
 
-impl<Opts, Args> Command<Opts, Args> {
+/// A struct containing parsed options and arguments.
+#[derive(Debug)]
+pub struct Command<InfoOpt, Opts, Args> {
+    name: String,
+    call_type: CallType<InfoOpt, Opts, Args>,
+}
+
+impl<InfoOpt, Opts, Args> Command<InfoOpt, Opts, Args> {
     pub fn new(name: &str) -> CommandPrecursor<Self> {
         CommandPrecursor {
             name: name.to_string(),
@@ -23,15 +28,11 @@ impl<Opts, Args> Command<Opts, Args> {
         &self.name
     }
 
-    pub fn options(&self) -> &Opts {
-        &self.options
+    pub fn call_type(&self) -> &CallType<InfoOpt, Opts, Args> {
+        &self.call_type
     }
 
-    pub fn arguments(&self) -> &Args {
-        &self.args
-    }
-
-    pub fn help(&self) -> HelpDisplay<Opts, Args> {
+    pub fn help(&self) -> HelpDisplay<InfoOpt, Opts, Args> {
         HelpDisplay::new(&self.name)
     }
 }
@@ -43,66 +44,33 @@ pub struct CommandPrecursor<Command> {
     _phantom: PhantomData<Command>,
 }
 
-impl<Opts, Args> CommandPrecursor<Command<Opts, Args>>
+impl<InfoOpt, Opts, Args> CommandPrecursor<Command<InfoOpt, Opts, Args>>
 where
+    InfoOpt: InformativeOption,
     Opts: Options,
     Args: Arguments,
 {
-    pub fn parse<I: Iterator<Item = String>>(self, args: I) -> Result<Command<Opts, Args>> {
-        Ok(self.parse_options(args)?.parse_arguments()?)
-    }
-
-    pub fn parse_options<I: Iterator<Item = String>>(
+    pub fn parse<I: Iterator<Item = String>>(
         self,
         args: I,
-    ) -> Result<OptionParsedCommand<Peekable<I>, Opts, Args>> {
+    ) -> Result<Command<InfoOpt, Opts, Args>> {
         let mut args = args.peekable();
         let _program_name = args.next();
-        Ok(OptionParsedCommand {
-            name: self.name,
-            options: Opts::parse(take_options(&mut args).into_iter())?,
-            iter: args,
-            _phantom: PhantomData,
-        })
-    }
-}
+        let options = take_options(&mut args);
 
-/// A struct as an intermediate just after parsing options.
-///
-/// This `struct` is created by `parse_option` method on `CommandPrecursor`.
-#[derive(Debug)]
-pub struct OptionParsedCommand<I, Opts, Args> {
-    name: String,
-    iter: I,
-    options: Opts,
-    _phantom: PhantomData<(Args)>,
-}
-
-impl<I, Opts, Args> OptionParsedCommand<I, Opts, Args> {
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn options(&self) -> &Opts {
-        &self.options
-    }
-
-    pub fn help(&self) -> HelpDisplay<Opts, Args> {
-        HelpDisplay::new(&self.name)
-    }
-
-    /// parse the other arguments.
-    pub fn parse_arguments(self) -> Result<Command<Opts, Args>>
-    where
-        I: Iterator<Item = String>,
-        Args: Arguments,
-    {
-        let mut iter = self.iter;
-        Ok(Command {
-            name: self.name,
-            options: self.options,
-            args: Args::parse(&mut iter)?,
-        })
+        match InfoOpt::parse(options.iter()) {
+            Some(info_opt) => Ok(Command {
+                name: self.name,
+                call_type: CallType::Informative(info_opt),
+            }),
+            None => Ok(Command {
+                name: self.name,
+                call_type: CallType::Normal(
+                    Opts::parse(options.into_iter())?,
+                    Args::parse(&mut args)?,
+                ),
+            }),
+        }
     }
 }
 
@@ -131,16 +99,17 @@ fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<Optio
 
 /// Helper struct for printing help messages with `format!` and `{}`.
 #[derive(Debug)]
-pub struct HelpDisplay<'a, Opts, Args>(&'a str, PhantomData<(Opts, Args)>);
+pub struct HelpDisplay<'a, InfoOpt, Opts, Args>(&'a str, PhantomData<(InfoOpt, Opts, Args)>);
 
-impl<'a, Opts, Args> HelpDisplay<'a, Opts, Args> {
+impl<'a, InfoOpt, Opts, Args> HelpDisplay<'a, InfoOpt, Opts, Args> {
     fn new(name: &'a str) -> Self {
         Self(name, PhantomData)
     }
 }
 
-impl<'a, Opts, Args> std::fmt::Display for HelpDisplay<'a, Opts, Args>
+impl<'a, InfoOpt, Opts, Args> std::fmt::Display for HelpDisplay<'a, InfoOpt, Opts, Args>
 where
+    InfoOpt: InformativeOption,
     Opts: Options,
     Args: Arguments,
 {
@@ -149,7 +118,7 @@ where
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0, indent = SPACER)?;
-        if !Opts::spec().is_empty() {
+        if !Opts::spec().is_empty() || !InfoOpt::spec().is_empty() {
             write!(f, " [OPTIONS]")?;
         }
         for arg in Args::spec() {
@@ -160,7 +129,15 @@ where
         }
         writeln!(f)?;
 
-        format_options(f, SPACER, Opts::spec())?;
+        format_options(
+            f,
+            SPACER,
+            InfoOpt::spec()
+                .iter()
+                .chain(Opts::spec().iter())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        )?;
 
         let var_args_spec = Args::var_spec();
         if let Some(longest_length) = Args::spec()
@@ -190,7 +167,7 @@ where
 fn format_options(
     f: &mut std::fmt::Formatter,
     spacer: &str,
-    opts: &[crate::Opt],
+    opts: &[&crate::Opt],
 ) -> std::fmt::Result {
     if let Some(longest_length) = opts.iter().map(|opt| opt.long.len()).max() {
         writeln!(f)?;
@@ -229,7 +206,7 @@ fn format_options(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parse_argument, Arg};
+    use crate::{parse_argument, Arg, DefaultInformativeOption};
     use std::path::PathBuf;
 
     struct Args {
@@ -273,22 +250,24 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<(), Args> =
+        let command: Command<DefaultInformativeOption, (), Args> =
             Command::new("sample").parse(args.iter().map(|s| s.to_string()))?;
 
-        assert_eq!(command.arguments().arg1, "arg1".to_string());
-        assert_eq!(command.arguments().arg2, 123);
-        assert_eq!(
-            command.arguments().arg3,
-            "path/to/file".parse::<PathBuf>().unwrap()
-        );
+        let args = match command.call_type() {
+            CallType::Normal(_opts, args) => args,
+            _ => panic!("CallType::Normal variant is expected for `command.call_type()`."),
+        };
+
+        assert_eq!(args.arg1, "arg1".to_string());
+        assert_eq!(args.arg2, 123);
+        assert_eq!(args.arg3, "path/to/file".parse::<PathBuf>().unwrap());
 
         Ok(())
     }
 
     #[test]
     fn format_usage() {
-        let usage = HelpDisplay::<(), Args>::new("sample");
+        let usage = HelpDisplay::<(), (), Args>::new("sample");
         assert_eq!(
             usage.to_string(),
             "\
