@@ -10,16 +10,9 @@
 //!
 //! #[derive(Options)]
 //! struct Opts {
-//!     #[description = "Print help message"]
-//!     #[short = 'h']
-//!     help: bool,
-//!
 //!     #[description = "Use verbose output"]
 //!     #[short = 'v']
 //!     verbose: bool,
-//!
-//!     #[description = "Print version information"]
-//!     version: bool,
 //! }
 //!
 //! #[derive(Arguments)]
@@ -31,25 +24,22 @@
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<Opts, Args>::new("program").parse_options(args).unwrap();
+//! let command = Command::<DefaultInformativeOption, Opts, Args>::new("program").parse(args).unwrap();
 //!
-//! if command.options().version {
-//!     // Print version information and exit.
+//! match command.call_type() {
+//!     CallType::Informative(info_opt) => match info_opt {
+//!         DefaultInformativeOption::Help => {
+//!             println!("{}", command.help());
+//!         },
+//!         DefaultInformativeOption::Version => {
+//!             // Print version information
+//!         }
+//!     },
+//!     CallType::Normal(opts, args) => {
+//!         assert!(opts.verbose);
+//!         assert_eq!(args.path, PathBuf::from("path/to/file"));
+//!     }
 //! }
-//!
-//! if command.options().help {
-//!     println!("{}", command.help());
-//!     // Exit
-//! }
-//!
-//! // Parse the other arguments
-//! let command = command.parse_arguments().unwrap();
-//!
-//! assert!(!command.options().help);
-//! assert!(!command.options().version);
-//! assert!(command.options().verbose);
-//!
-//! assert_eq!(command.arguments().path, PathBuf::from("path/to/file"));
 //! ```
 
 mod arguments;

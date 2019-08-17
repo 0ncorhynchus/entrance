@@ -23,19 +23,12 @@ struct Opts {
     #[description = "Use verbose output"]
     #[short = 'v']
     verbose: bool,
-
-    #[description = "Print version information"]
-    version: bool,
-
-    #[description = "Print help message"]
-    #[short = 'h']
-    help: bool,
 }
 
-type Command = entrance::Command<Opts, Args>;
+type Command = entrance::Command<DefaultInformativeOption, Opts, Args>;
 
 fn main() {
-    let command = match Command::new("sample").parse_options(env::args()) {
+    let command = match Command::new("sample").parse(env::args()) {
         Ok(command) => command,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
@@ -43,32 +36,27 @@ fn main() {
         }
     };
 
-    if command.options().help {
-        println!("{}", command.help());
-        return;
-    }
-
-    if command.options().version {
-        println!("sample 0.1.0");
-        return;
-    }
-
-    let command = match command.parse_arguments() {
-        Ok(command) => command,
-        Err(err) => {
-            eprintln!("\x1b[31merror:\x1b[m {}", err);
-            std::process::exit(2);
+    match command.call_type() {
+        CallType::Informative(info_opt) => {
+            match info_opt {
+                DefaultInformativeOption::Help => {
+                    println!("{}", command.help());
+                }
+                DefaultInformativeOption::Version => {
+                    println!("sample 0.1.0");
+                }
+            };
+            return;
         }
-    };
-
-    println!("--verbose: {}", command.options().verbose);
-    println!("--version: {}", command.options().version);
-    println!("--help:    {}", command.options().help);
-    println!("integer: {}", command.arguments().integer);
-    println!("float:   {}", command.arguments().float);
-    println!("string:  {}", command.arguments().string);
-    println!("paths:");
-    for path in &command.arguments().files {
-        println!("    {}", path.display());
+        CallType::Normal(opts, args) => {
+            println!("--verbose: {}", opts.verbose);
+            println!("integer: {}", args.integer);
+            println!("float:   {}", args.float);
+            println!("string:  {}", args.string);
+            println!("paths:");
+            for path in &args.files {
+                println!("    {}", path.display());
+            }
+        }
     }
 }
