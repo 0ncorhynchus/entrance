@@ -1,6 +1,6 @@
 [package]
 name = "entrance"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Suguru Kato <salmon.bioinformatics@gmail.com>"]
 edition = "2018"
 
@@ -20,7 +20,7 @@ failure = "0.1.5"
 [dependencies.entrance_derive]
 optional = true
 path = "./entrance_derive"
-version = "0.1"
+version = "0.2"
 
 [workspace]
 members = [".", "entrance_derive"]
