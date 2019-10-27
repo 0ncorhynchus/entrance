@@ -33,8 +33,8 @@ where
         &self,
         args: I,
     ) -> Result<CallType<InfoOpt, Opts, Args>> {
-        let mut args = args.peekable();
-        let _program_name = args.next();
+        // Skip the first element (= program_name)
+        let mut args = args.skip(1).peekable();
         let options = take_options(&mut args);
 
         match InfoOpt::parse(options.iter()) {
