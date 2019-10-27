@@ -28,15 +28,16 @@ struct Opts {
 type Command = entrance::Command<DefaultInformativeOption, Opts, Args>;
 
 fn main() {
-    let command = match Command::new("sample").parse(env::args()) {
-        Ok(command) => command,
+    let command = Command::new("sample");
+    let call_type = match command.parse(env::args()) {
+        Ok(call_type) => call_type,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
             std::process::exit(1);
         }
     };
 
-    match command.call_type() {
+    match call_type {
         CallType::Informative(info_opt) => {
             match info_opt {
                 DefaultInformativeOption::Help => {

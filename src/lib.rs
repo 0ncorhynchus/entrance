@@ -24,9 +24,9 @@
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<DefaultInformativeOption, Opts, Args>::new("program").parse(args).unwrap();
+//! let command = Command::<DefaultInformativeOption, Opts, Args>::new("program");
 //!
-//! match command.call_type() {
+//! match command.parse(args).unwrap() {
 //!     CallType::Informative(info_opt) => match info_opt {
 //!         DefaultInformativeOption::Help => {
 //!             println!("{}", command.help());
