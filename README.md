@@ -16,11 +16,12 @@ Simple usage
 use entrance::*;
 use std::env::args;
 
-fn main() {
-    let command: Command<DefaultInformativeOption, (), ()> =
-        Command::new(env!("CARGO_PKG_NAME")).parse(args()).unwrap();
+type Command = entrance::Command<DefaultInformativeOption, (), ()>;
 
-    match command.call_type() {
+fn main() {
+    let command = Command::new(env!("CARGO_PKG_NAME"));
+
+    match command.parse(args()).unwrap() {
         CallType::Informative(info_opt) => match info_opt {
             DefaultInformativeOption::Help => {
                 println!("{}", command.help());
@@ -42,11 +43,13 @@ Structs and traits
 This struct provides tools for parsing command line arguments.
 
 Before parsing command line arguments, it is necessary to create the instance
-with the associated function `new`.
-Then, use `parse` or `parse_options` and `parse_arguments`.
+with the associated function `new` then, call `parse` of the instance.
 
-If arguments should be parsed after checking options, use `parse_options` and `parse_arguments`.
-Otherwise, use `parse` simply.
+### InformativeOption
+
+A derive macro is available for this.
+
+Limitation: the macro supports only the enum with unit variants.
 
 ### Options
 

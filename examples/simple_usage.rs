@@ -1,11 +1,12 @@
 use entrance::*;
 use std::env::args;
 
-fn main() {
-    let command: Command<DefaultInformativeOption, (), ()> =
-        Command::new(env!("CARGO_PKG_NAME")).parse(args()).unwrap();
+type Command = entrance::Command<DefaultInformativeOption, (), ()>;
 
-    match command.call_type() {
+fn main() {
+    let command = Command::new(env!("CARGO_PKG_NAME"));
+
+    match command.parse(args()).unwrap() {
         CallType::Informative(info_opt) => match info_opt {
             DefaultInformativeOption::Help => {
                 println!("{}", command.help());

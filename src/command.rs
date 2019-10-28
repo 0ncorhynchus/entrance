@@ -9,18 +9,40 @@ pub enum CallType<InfoOpt, Opts, Args> {
     Normal(Opts, Args),
 }
 
-/// A struct containing parsed options and arguments.
+/// Helper struct for parsing command line arguments and returning `CallType`.
 #[derive(Debug)]
 pub struct Command<InfoOpt, Opts, Args> {
     name: String,
-    call_type: CallType<InfoOpt, Opts, Args>,
+    _phantom: PhantomData<CallType<InfoOpt, Opts, Args>>,
 }
 
-impl<InfoOpt, Opts, Args> Command<InfoOpt, Opts, Args> {
-    pub fn new(name: &str) -> CommandPrecursor<Self> {
-        CommandPrecursor {
+impl<InfoOpt, Opts, Args> Command<InfoOpt, Opts, Args>
+where
+    InfoOpt: InformativeOption,
+    Opts: Options,
+    Args: Arguments,
+{
+    pub fn new(name: &str) -> Self {
+        Self {
             name: name.to_string(),
             _phantom: PhantomData,
+        }
+    }
+
+    pub fn parse<I: Iterator<Item = String>>(
+        &self,
+        args: I,
+    ) -> Result<CallType<InfoOpt, Opts, Args>> {
+        // Skip the first element (= program_name)
+        let mut args = args.skip(1).peekable();
+        let options = take_options(&mut args);
+
+        match InfoOpt::parse(options.iter()) {
+            Some(info_opt) => Ok(CallType::Informative(info_opt)),
+            None => Ok(CallType::Normal(
+                Opts::parse(options.into_iter())?,
+                Args::parse(&mut args)?,
+            )),
         }
     }
 
@@ -28,49 +50,8 @@ impl<InfoOpt, Opts, Args> Command<InfoOpt, Opts, Args> {
         &self.name
     }
 
-    pub fn call_type(&self) -> &CallType<InfoOpt, Opts, Args> {
-        &self.call_type
-    }
-
     pub fn help(&self) -> HelpDisplay<InfoOpt, Opts, Args> {
-        HelpDisplay::new(&self.name)
-    }
-}
-
-/// Helper struct for parsing command line arguments and returning `Command`.
-#[derive(Debug)]
-pub struct CommandPrecursor<Command> {
-    name: String,
-    _phantom: PhantomData<Command>,
-}
-
-impl<InfoOpt, Opts, Args> CommandPrecursor<Command<InfoOpt, Opts, Args>>
-where
-    InfoOpt: InformativeOption,
-    Opts: Options,
-    Args: Arguments,
-{
-    pub fn parse<I: Iterator<Item = String>>(
-        self,
-        args: I,
-    ) -> Result<Command<InfoOpt, Opts, Args>> {
-        let mut args = args.peekable();
-        let _program_name = args.next();
-        let options = take_options(&mut args);
-
-        match InfoOpt::parse(options.iter()) {
-            Some(info_opt) => Ok(Command {
-                name: self.name,
-                call_type: CallType::Informative(info_opt),
-            }),
-            None => Ok(Command {
-                name: self.name,
-                call_type: CallType::Normal(
-                    Opts::parse(options.into_iter())?,
-                    Args::parse(&mut args)?,
-                ),
-            }),
-        }
+        HelpDisplay::new(self.name())
     }
 }
 
@@ -250,10 +231,9 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<DefaultInformativeOption, (), Args> =
-            Command::new("sample").parse(args.iter().map(|s| s.to_string()))?;
+        let command: Command<DefaultInformativeOption, (), Args> = Command::new("sample");
 
-        let args = match command.call_type() {
+        let args = match command.parse(args.iter().map(|s| s.to_string()))? {
             CallType::Normal(_opts, args) => args,
             _ => panic!("CallType::Normal variant is expected for `command.call_type()`."),
         };
