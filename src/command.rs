@@ -152,15 +152,15 @@ fn format_options(
 ) -> std::fmt::Result {
     if let Some(longest_length) = opts.iter().map(|opt| opt.long.len()).max() {
         writeln!(f)?;
-        writeln!(f, "OPTIONS")?;
+        writeln!(f, "OPTIONS:")?;
         if opts.iter().any(|opt| opt.short.is_some()) {
             for opt in opts {
                 writeln!(
                     f,
-                    "{spacer}{}, --{:<width$}{spacer}{}",
+                    "{spacer}{} --{:<width$}{spacer}{}",
                     opt.short
-                        .map(|f| ['-', f].iter().collect())
-                        .unwrap_or_else(|| "  ".to_string()),
+                        .map(|f| format!("-{},", f))
+                        .unwrap_or_else(|| "   ".to_string()),
                     opt.long,
                     opt.description,
                     spacer = spacer,
