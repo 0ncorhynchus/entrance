@@ -60,12 +60,8 @@ impl OptionsInput {
         let shorts = options.iter().map(|option| option_to_tokens(option.short));
         (quote! {
             impl entrance::Options for #ident {
-                fn parse<I: std::iter::Iterator<Item = entrance::OptionItem>>(
-                    options: I,
-                ) -> std::vec::Vec<entrance::Result<Self>> {
-                    options.map(|option| {
-                        #parse_lines
-                    }).collect()
+                fn parse(option: entrance::OptionItem) -> entrance::Result<Self> {
+                    #parse_lines
                 }
 
                 fn spec() -> &'static [entrance::Opt] {

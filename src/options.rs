@@ -27,17 +27,15 @@ pub enum OptionItem {
 /// # Limitation
 /// The derive macro for `Options` supports only an Enum whose variants don't have any field.
 pub trait Options: Sized {
-    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Vec<Result<Self>>;
+    fn parse(option: OptionItem) -> Result<Self>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
 
 impl Options for () {
-    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Vec<Result<Self>> {
-        options
-            .map(|_opt| Err(ErrorKind::InvalidOption.into()))
-            .collect()
+    fn parse(_: OptionItem) -> Result<Self> {
+        Err(ErrorKind::InvalidOption.into())
     }
 
     fn spec() -> &'static [Opt] {
@@ -129,13 +127,11 @@ mod tests {
             OptionItem::Long("flag1".to_string()),
             OptionItem::Short('2'),
         ];
-        let opts: Vec<Result<()>> = <() as Options>::parse(options.into_iter())
-            .into_iter()
-            .collect();
-        assert_eq!(opts.len(), 2);
-        for opt in opts {
-            assert!(opt.is_err());
-            assert_eq!(opt.unwrap_err().kind(), ErrorKind::InvalidOption);
+
+        for option in options {
+            let option = <() as Options>::parse(option);
+            assert!(option.is_err());
+            assert_eq!(option.unwrap_err().kind(), ErrorKind::InvalidOption);
         }
 
         Ok(())

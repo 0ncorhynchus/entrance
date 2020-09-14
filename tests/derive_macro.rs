@@ -29,30 +29,19 @@ fn options() -> Result<(), entrance::Error> {
         Help,
     }
 
-    let options = vec![
-        OptionItem::Long("help".to_string()),
-        OptionItem::Long("verbose".to_string()),
-    ];
-    let opts: entrance::Result<Vec<_>> = Opts::parse(options.into_iter()).into_iter().collect();
-    let opts = opts?;
+    let option = Opts::parse(OptionItem::Long("verbose".to_string()))?;
+    assert_eq!(option, Opts::Verbose);
 
-    assert!(opts.contains(&Opts::Verbose));
-    assert!(!opts.contains(&Opts::Version));
-    assert!(opts.contains(&Opts::Help));
+    let option = Opts::parse(OptionItem::Long("version".to_string()))?;
+    assert_eq!(option, Opts::Version);
 
-    let options = vec![
-        OptionItem::Long("help".to_string()),
-        OptionItem::Long("invalid".to_string()),
-    ];
-    let opts = Opts::parse(options.into_iter());
-    assert_eq!(opts.len(), 2);
+    let option = Opts::parse(OptionItem::Long("help".to_string()))?;
+    assert_eq!(option, Opts::Help);
 
-    assert!(opts[0].is_ok());
-    assert_eq!(opts[0].as_ref().unwrap(), &Opts::Help);
-
-    assert!(opts[1].is_err());
+    let option = Opts::parse(OptionItem::Long("invalid".to_string()));
+    assert!(option.is_err());
     assert_eq!(
-        opts[1].as_ref().unwrap_err().kind(),
+        option.unwrap_err().kind(),
         entrance::ErrorKind::InvalidOption
     );
 

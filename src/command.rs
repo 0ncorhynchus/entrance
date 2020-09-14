@@ -40,8 +40,11 @@ where
         match InfoOpt::parse(options.iter()) {
             Some(info_opt) => Ok(CallType::Informative(info_opt)),
             None => {
-                let opts: Result<Vec<_>> = Opts::parse(options.into_iter()).into_iter().collect();
-                Ok(CallType::Normal(opts?, Args::parse(&mut args)?))
+                let mut opts = Vec::new();
+                for option in options {
+                    opts.push(Opts::parse(option)?);
+                }
+                Ok(CallType::Normal(opts, Args::parse(&mut args)?))
             }
         }
     }
