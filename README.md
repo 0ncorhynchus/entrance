@@ -55,7 +55,7 @@ Limitation: the macro supports only the enum with unit variants.
 
 A derive macro is available for this.
 
-Limitation: the macro supports only the struct with `bool` members.
+Limitation: the derive macro supports only an Enum whose variants don't have any field.
 
 ### Arguments
 

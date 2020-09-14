@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 #[derive(Debug, PartialEq)]
 pub enum CallType<InfoOpt, Opts, Args> {
     Informative(InfoOpt),
-    Normal(Opts, Args),
+    Normal(Vec<Opts>, Args),
 }
 
 /// Helper struct for parsing command line arguments and returning `CallType`.

@@ -14,32 +14,31 @@ pub enum OptionItem {
 /// use entrance::Options;
 ///
 /// #[derive(Options)]
-/// struct Opts {
+/// enum Opts {
 ///     #[description = "Print help message"]
 ///     #[short = 'h']
-///     help: bool,
+///     Help,
 ///
 ///     #[description = "Print version infomation"]
-///     version: bool,
+///     Version,
 /// }
 /// ```
 ///
 /// # Limitation
-/// The derive macro for `Options` supports only a struct with named fields.
-/// Additionally, only `bool` is supported for the type of these fields.
+/// The derive macro for `Options` supports only an Enum whose variants don't have any field.
 pub trait Options: Sized {
-    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Result<Self>;
+    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Result<Vec<Self>>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
 
 impl Options for () {
-    fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Self> {
+    fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Vec<Self>> {
         if options.next().is_some() {
             return Err(ErrorKind::InvalidOption.into());
         }
-        Ok(())
+        Ok(Vec::new())
     }
 
     fn spec() -> &'static [Opt] {

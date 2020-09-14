@@ -18,11 +18,11 @@ struct Args {
     files: Vec<PathBuf>,
 }
 
-#[derive(Options)]
-struct Opts {
+#[derive(Options, PartialEq)]
+enum Opts {
     #[description = "Use verbose output"]
     #[short = 'v']
-    verbose: bool,
+    Verbose,
 }
 
 type Command = entrance::Command<DefaultInformativeOption, Opts, Args>;
@@ -50,7 +50,9 @@ fn main() {
             return;
         }
         CallType::Normal(opts, args) => {
-            println!("--verbose: {}", opts.verbose);
+            if opts.contains(&Opts::Verbose) {
+                println!("--verbose");
+            }
             println!("integer: {}", args.integer);
             println!("float:   {}", args.float);
             println!("string:  {}", args.string);

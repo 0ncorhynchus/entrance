@@ -6,28 +6,28 @@ use syn::punctuated::Punctuated;
 use syn::{braced, Token};
 
 pub struct OptionsInput {
-    _struct_token: Token![struct],
+    _struct_token: Token![enum],
     ident: syn::Ident,
     _brace_token: syn::token::Brace,
-    fields: Punctuated<OptionField, Token![,]>,
+    variants: Punctuated<OptionVariant, Token![,]>,
 }
 
 impl OptionsInput {
     pub fn gen(&self) -> TokenStream {
         let ident = &self.ident;
-        let options: Vec<_> = self.fields.iter().collect();
-        let declare_lines = options.iter().map(|option| {
-            let ident = &option.ident;
+        let options: Vec<_> = self.variants.iter().collect();
+        let long_option_arms = options.iter().map(|option| {
+            let option = &option.ident;
+            let long = get_long_option(option);
             quote! {
-                let mut #ident = false;
+                #long => #ident::#option,
             }
         });
-        let long_option_arms = options.iter().map(|option| long_option_arm(&option.ident));
         let short_option_arms = options.iter().filter_map(|option| {
-            let ident = &option.ident;
             let short = option.short?;
+            let option = &option.ident;
             Some(quote! {
-                #short => #ident = true,
+                #short => #ident::#option,
             })
         });
         let parse_lines = quote! {
@@ -54,36 +54,28 @@ impl OptionsInput {
                 }
             }
         };
-        let idents = options.iter().map(|option| &option.ident);
-        let idents_for_spec = options.iter().map(|option| &option.ident);
+        let idents = options.iter().map(|option| get_long_option(&option.ident));
         let num_options = options.len();
         let descriptions = options.iter().map(|option| &option.description);
         let shorts = options.iter().map(|option| option_to_tokens(option.short));
         (quote! {
             impl entrance::Options for #ident {
                 fn parse<I: std::iter::Iterator<Item = entrance::OptionItem>>(
-                    mut options: I,
-                ) -> std::result::Result<Self, entrance::Error> {
-                    #(
-                        #declare_lines
-                    )*
-
-                    for option in options {
-                        #parse_lines
+                    mut inputs: I,
+                ) -> std::result::Result<std::vec::Vec<Self>, entrance::Error> {
+                    let mut options = Vec::new();
+                    for option in inputs {
+                        let option = #parse_lines;
+                        options.push(option);
                     }
-
-                    Ok(Self {
-                        #(
-                            #idents,
-                        )*
-                    })
+                    Ok(options)
                 }
 
                 fn spec() -> &'static [entrance::Opt] {
                     static OPTS: [entrance::Opt; #num_options] = [
                         #(
                             entrance::Opt {
-                                long: stringify!(#idents_for_spec),
+                                long: #idents,
                                 short: #shorts,
                                 description: #descriptions,
                             },
@@ -100,17 +92,17 @@ impl OptionsInput {
 impl Parse for OptionsInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
-        if lookahead.peek(Token![struct]) {
+        if lookahead.peek(Token![enum]) {
             let content;
             let struct_token = input.parse()?;
             let ident = input.parse()?;
             let brace_token = braced!(content in input);
-            let fields = content.parse_terminated(OptionField::parse)?;
+            let variants = content.parse_terminated(OptionVariant::parse)?;
             Ok(Self {
                 _struct_token: struct_token,
                 ident,
                 _brace_token: brace_token,
-                fields,
+                variants,
             })
         } else {
             Err(lookahead.error())
@@ -118,18 +110,17 @@ impl Parse for OptionsInput {
     }
 }
 
-struct OptionField {
+struct OptionVariant {
     ident: syn::Ident,
     short: Option<char>,
     description: String,
 }
-
-impl Parse for OptionField {
+impl Parse for OptionVariant {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let field = syn::Field::parse_named(input)?;
+        let variant = syn::Variant::parse(input)?;
 
-        let ident = field.ident.unwrap();
-        let name_value_attrs = extract_name_values(&field.attrs);
+        let ident = variant.ident;
+        let name_value_attrs = extract_name_values(&variant.attrs);
 
         let short = get_short_attribute(&name_value_attrs)?;
         let description = get_description(&name_value_attrs);
@@ -142,10 +133,8 @@ impl Parse for OptionField {
     }
 }
 
-fn long_option_arm(option: &syn::Ident) -> impl quote::ToTokens {
-    quote!(
-        stringify!(#option) => #option = true,
-    )
+fn get_long_option(ident: &syn::Ident) -> String {
+    ident.to_string().to_lowercase()
 }
 
 fn get_short_attribute(name_value_attrs: &[syn::MetaNameValue]) -> syn::Result<Option<char>> {

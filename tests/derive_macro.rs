@@ -23,10 +23,10 @@ fn struct_with_named_fields() -> entrance::Result<()> {
 #[test]
 fn options() -> Result<(), entrance::Error> {
     #[derive(Options, Debug, PartialEq)]
-    struct Opts {
-        verbose: bool,
-        version: bool,
-        help: bool,
+    enum Opts {
+        Verbose,
+        Version,
+        Help,
     }
 
     let options = vec![
@@ -35,9 +35,9 @@ fn options() -> Result<(), entrance::Error> {
     ];
     let opts = Opts::parse(options.into_iter())?;
 
-    assert!(opts.verbose);
-    assert!(!opts.version);
-    assert!(opts.help);
+    assert!(opts.contains(&Opts::Verbose));
+    assert!(!opts.contains(&Opts::Version));
+    assert!(opts.contains(&Opts::Help));
 
     let options = vec![
         OptionItem::Long("help".to_string()),

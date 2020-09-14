@@ -9,10 +9,10 @@
 //! use std::path::PathBuf;
 //!
 //! #[derive(Options)]
-//! struct Opts {
+//! enum Opts {
 //!     #[description = "Use verbose output"]
 //!     #[short = 'v']
-//!     verbose: bool,
+//!     Verbose,
 //! }
 //!
 //! #[derive(Arguments)]
@@ -36,7 +36,7 @@
 //!         }
 //!     },
 //!     CallType::Normal(opts, args) => {
-//!         assert!(opts.verbose);
+//!         assert!(!opts.is_empty());
 //!         assert_eq!(args.path, PathBuf::from("path/to/file"));
 //!     }
 //! }
