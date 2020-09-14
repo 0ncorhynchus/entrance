@@ -20,14 +20,14 @@ impl OptionsInput {
             let option = &option.ident;
             let long = get_long_option(option);
             quote! {
-                #long => #ident::#option,
+                #long => Ok(#ident::#option),
             }
         });
         let short_option_arms = options.iter().filter_map(|option| {
             let short = option.short?;
             let option = &option.ident;
             Some(quote! {
-                #short => #ident::#option,
+                #short => Ok(#ident::#option),
             })
         });
         let parse_lines = quote! {
@@ -38,7 +38,7 @@ impl OptionsInput {
                             #long_option_arms
                         )*
                         _ => {
-                            return Err(entrance::ErrorKind::InvalidOption.into());
+                            Err(entrance::ErrorKind::InvalidOption.into())
                         }
                     }
                 }
@@ -48,7 +48,7 @@ impl OptionsInput {
                             #short_option_arms
                         )*
                         _ => {
-                            return Err(entrance::ErrorKind::InvalidOption.into());
+                            Err(entrance::ErrorKind::InvalidOption.into())
                         }
                     }
                 }
@@ -61,14 +61,11 @@ impl OptionsInput {
         (quote! {
             impl entrance::Options for #ident {
                 fn parse<I: std::iter::Iterator<Item = entrance::OptionItem>>(
-                    mut inputs: I,
-                ) -> std::result::Result<std::vec::Vec<Self>, entrance::Error> {
-                    let mut options = Vec::new();
-                    for option in inputs {
-                        let option = #parse_lines;
-                        options.push(option);
-                    }
-                    Ok(options)
+                    options: I,
+                ) -> std::vec::Vec<entrance::Result<Self>> {
+                    options.map(|option| {
+                        #parse_lines
+                    }).collect()
                 }
 
                 fn spec() -> &'static [entrance::Opt] {

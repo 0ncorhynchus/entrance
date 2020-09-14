@@ -27,18 +27,17 @@ pub enum OptionItem {
 /// # Limitation
 /// The derive macro for `Options` supports only an Enum whose variants don't have any field.
 pub trait Options: Sized {
-    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Result<Vec<Self>>;
+    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Vec<Result<Self>>;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
 
 impl Options for () {
-    fn parse<I: Iterator<Item = OptionItem>>(mut options: I) -> Result<Vec<Self>> {
-        if options.next().is_some() {
-            return Err(ErrorKind::InvalidOption.into());
-        }
-        Ok(Vec::new())
+    fn parse<I: Iterator<Item = OptionItem>>(options: I) -> Vec<Result<Self>> {
+        options
+            .map(|_opt| Err(ErrorKind::InvalidOption.into()))
+            .collect()
     }
 
     fn spec() -> &'static [Opt] {
@@ -130,17 +129,13 @@ mod tests {
             OptionItem::Long("flag1".to_string()),
             OptionItem::Short('2'),
         ];
-        let opts = <() as Options>::parse(options.into_iter());
-        match opts {
-            Ok(_) => {
-                panic!("Err variant is expected.");
-            }
-            Err(error) => match error.kind() {
-                ErrorKind::InvalidOption => {}
-                _ => {
-                    panic!("ErrorKind::InvalidOption is expected.");
-                }
-            },
+        let opts: Vec<Result<()>> = <() as Options>::parse(options.into_iter())
+            .into_iter()
+            .collect();
+        assert_eq!(opts.len(), 2);
+        for opt in opts {
+            assert!(opt.is_err());
+            assert_eq!(opt.unwrap_err().kind(), ErrorKind::InvalidOption);
         }
 
         Ok(())

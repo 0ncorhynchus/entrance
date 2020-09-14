@@ -33,7 +33,8 @@ fn options() -> Result<(), entrance::Error> {
         OptionItem::Long("help".to_string()),
         OptionItem::Long("verbose".to_string()),
     ];
-    let opts = Opts::parse(options.into_iter())?;
+    let opts: entrance::Result<Vec<_>> = Opts::parse(options.into_iter()).into_iter().collect();
+    let opts = opts?;
 
     assert!(opts.contains(&Opts::Verbose));
     assert!(!opts.contains(&Opts::Version));
@@ -44,17 +45,16 @@ fn options() -> Result<(), entrance::Error> {
         OptionItem::Long("invalid".to_string()),
     ];
     let opts = Opts::parse(options.into_iter());
-    match opts {
-        Ok(_) => {
-            panic!("Err variant is expected.");
-        }
-        Err(error) => match error.kind() {
-            entrance::ErrorKind::InvalidOption => {}
-            _ => {
-                panic!("ErrorKind::InvalidOption is expected.");
-            }
-        },
-    }
+    assert_eq!(opts.len(), 2);
+
+    assert!(opts[0].is_ok());
+    assert_eq!(opts[0].as_ref().unwrap(), &Opts::Help);
+
+    assert!(opts[1].is_err());
+    assert_eq!(
+        opts[1].as_ref().unwrap_err().kind(),
+        entrance::ErrorKind::InvalidOption
+    );
 
     Ok(())
 }
