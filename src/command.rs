@@ -1,24 +1,23 @@
 use crate::Result;
-use crate::{Arguments, InformativeOption, OptionItem, Options};
+use crate::{Arguments, OptionItem, Options};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 
 #[derive(Debug, PartialEq)]
-pub enum CallType<InfoOpt, Opts, Args> {
-    Informative(InfoOpt),
+pub enum CallType<Opts, Args> {
+    Informative(Opts),
     Normal(Vec<Opts>, Args),
 }
 
 /// Helper struct for parsing command line arguments and returning `CallType`.
 #[derive(Debug)]
-pub struct Command<InfoOpt, Opts, Args> {
+pub struct Command<Opts, Args> {
     name: String,
-    _phantom: PhantomData<CallType<InfoOpt, Opts, Args>>,
+    _phantom: PhantomData<CallType<Opts, Args>>,
 }
 
-impl<InfoOpt, Opts, Args> Command<InfoOpt, Opts, Args>
+impl<Opts, Args> Command<Opts, Args>
 where
-    InfoOpt: InformativeOption,
     Opts: Options,
     Args: Arguments,
 {
@@ -29,31 +28,33 @@ where
         }
     }
 
-    pub fn parse<I: Iterator<Item = String>>(
-        &self,
-        args: I,
-    ) -> Result<CallType<InfoOpt, Opts, Args>> {
+    pub fn parse<I: Iterator<Item = String>>(&self, args: I) -> Result<CallType<Opts, Args>> {
         // Skip the first element (= program_name)
         let mut args = args.skip(1).peekable();
         let options = take_options(&mut args);
 
-        match InfoOpt::parse(options.iter()) {
-            Some(info_opt) => Ok(CallType::Informative(info_opt)),
-            None => {
-                let mut opts = Vec::new();
-                for option in options {
-                    opts.push(Opts::parse(option)?);
+        let mut opts: Vec<_> = options.into_iter().map(Opts::parse).collect();
+        let informative_idx = opts.iter().enumerate().find_map(|(idx, opt)| {
+            if let Ok(opt) = opt {
+                if opt.is_informative() {
+                    return Some(idx);
                 }
-                Ok(CallType::Normal(opts, Args::parse(&mut args)?))
             }
+            None
+        });
+        if let Some(idx) = informative_idx {
+            return Ok(CallType::Informative(opts.remove(idx).unwrap()));
         }
+
+        let opts: Result<Vec<_>> = opts.into_iter().collect();
+        Ok(CallType::Normal(opts?, Args::parse(&mut args)?))
     }
 
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    pub fn help(&self) -> HelpDisplay<InfoOpt, Opts, Args> {
+    pub fn help(&self) -> HelpDisplay<Opts, Args> {
         HelpDisplay::new(self.name())
     }
 }
@@ -83,17 +84,16 @@ fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<Optio
 
 /// Helper struct for printing help messages with `format!` and `{}`.
 #[derive(Debug)]
-pub struct HelpDisplay<'a, InfoOpt, Opts, Args>(&'a str, PhantomData<(InfoOpt, Opts, Args)>);
+pub struct HelpDisplay<'a, Opts, Args>(&'a str, PhantomData<(Opts, Args)>);
 
-impl<'a, InfoOpt, Opts, Args> HelpDisplay<'a, InfoOpt, Opts, Args> {
+impl<'a, Opts, Args> HelpDisplay<'a, Opts, Args> {
     fn new(name: &'a str) -> Self {
         Self(name, PhantomData)
     }
 }
 
-impl<'a, InfoOpt, Opts, Args> std::fmt::Display for HelpDisplay<'a, InfoOpt, Opts, Args>
+impl<'a, Opts, Args> std::fmt::Display for HelpDisplay<'a, Opts, Args>
 where
-    InfoOpt: InformativeOption,
     Opts: Options,
     Args: Arguments,
 {
@@ -102,7 +102,7 @@ where
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0, indent = SPACER)?;
-        if !Opts::spec().is_empty() || !InfoOpt::spec().is_empty() {
+        if !Opts::spec().is_empty() {
             write!(f, " [OPTIONS]")?;
         }
         for arg in Args::spec() {
@@ -113,15 +113,7 @@ where
         }
         writeln!(f)?;
 
-        format_options(
-            f,
-            SPACER,
-            InfoOpt::spec()
-                .iter()
-                .chain(Opts::spec().iter())
-                .collect::<Vec<_>>()
-                .as_slice(),
-        )?;
+        format_options(f, SPACER, Opts::spec())?;
 
         let var_args_spec = Args::var_spec();
         if let Some(longest_length) = Args::spec()
@@ -151,7 +143,7 @@ where
 fn format_options(
     f: &mut std::fmt::Formatter,
     spacer: &str,
-    opts: &[&crate::Opt],
+    opts: &[crate::Opt],
 ) -> std::fmt::Result {
     if let Some(longest_length) = opts.iter().map(|opt| opt.long.len()).max() {
         writeln!(f)?;
@@ -190,7 +182,7 @@ fn format_options(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parse_argument, Arg, DefaultInformativeOption};
+    use crate::{parse_argument, Arg};
     use std::path::PathBuf;
 
     struct Args {
@@ -234,7 +226,7 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<DefaultInformativeOption, (), Args> = Command::new("sample");
+        let command: Command<(), Args> = Command::new("sample");
 
         let args = match command.parse(args.iter().map(|s| s.to_string()))? {
             CallType::Normal(_opts, args) => args,
@@ -250,7 +242,7 @@ mod tests {
 
     #[test]
     fn format_usage() {
-        let usage = HelpDisplay::<(), (), Args>::new("sample");
+        let usage = HelpDisplay::<(), Args>::new("sample");
         assert_eq!(
             usage.to_string(),
             "\

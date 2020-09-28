@@ -17,9 +17,11 @@ pub enum OptionItem {
 /// enum Opts {
 ///     #[description = "Print help message"]
 ///     #[short = 'h']
+///     #[informative]
 ///     Help,
 ///
 ///     #[description = "Print version infomation"]
+///     #[informative]
 ///     Version,
 /// }
 /// ```
@@ -28,6 +30,8 @@ pub enum OptionItem {
 /// The derive macro for `Options` supports only an Enum whose variants don't have any field.
 pub trait Options: Sized {
     fn parse(option: OptionItem) -> Result<Self>;
+
+    fn is_informative(&self) -> bool;
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
@@ -38,75 +42,12 @@ impl Options for () {
         Err(ErrorKind::InvalidOption.into())
     }
 
-    fn spec() -> &'static [Opt] {
-        &[]
-    }
-}
-
-pub trait InformativeOption: Sized {
-    fn parse<'a, I: Iterator<Item = &'a OptionItem>>(options: I) -> Option<Self>;
-
-    /// This associated function is for `HelpDisplay`.
-    fn spec() -> &'static [Opt];
-}
-
-impl InformativeOption for () {
-    fn parse<'a, I: Iterator<Item = &'a OptionItem>>(_options: I) -> Option<Self> {
-        None
+    fn is_informative(&self) -> bool {
+        unimplemented!()
     }
 
     fn spec() -> &'static [Opt] {
         &[]
-    }
-}
-
-pub enum DefaultInformativeOption {
-    Help,
-    Version,
-}
-
-impl InformativeOption for DefaultInformativeOption {
-    fn parse<'a, I: Iterator<Item = &'a OptionItem>>(options: I) -> Option<Self> {
-        for opt in options {
-            match opt {
-                OptionItem::Long(opt) => match opt.as_str() {
-                    "help" => {
-                        return Some(DefaultInformativeOption::Help);
-                    }
-                    "version" => {
-                        return Some(DefaultInformativeOption::Version);
-                    }
-                    _ => {}
-                },
-                OptionItem::Short(opt) => match opt {
-                    'h' => {
-                        return Some(DefaultInformativeOption::Help);
-                    }
-                    'V' => {
-                        return Some(DefaultInformativeOption::Version);
-                    }
-                    _ => {}
-                },
-            }
-        }
-        None
-    }
-
-    /// This associated function is for `HelpDisplay`.
-    fn spec() -> &'static [Opt] {
-        static OPTS: [Opt; 2] = [
-            Opt {
-                long: "help",
-                short: Some('h'),
-                description: "Print help message",
-            },
-            Opt {
-                long: "version",
-                short: Some('V'),
-                description: "Print the version",
-            },
-        ];
-        &OPTS
     }
 }
 

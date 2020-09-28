@@ -20,12 +20,17 @@ struct Args {
 
 #[derive(Options, PartialEq)]
 enum Opts {
+    #[description = "Print the help message"]
+    #[short = 'h']
+    #[informative]
+    Help,
+
     #[description = "Use verbose output"]
     #[short = 'v']
     Verbose,
 }
 
-type Command = entrance::Command<DefaultInformativeOption, Opts, Args>;
+type Command = entrance::Command<Opts, Args>;
 
 fn main() {
     let command = Command::new("sample");
@@ -38,15 +43,8 @@ fn main() {
     };
 
     match call_type {
-        CallType::Informative(info_opt) => {
-            match info_opt {
-                DefaultInformativeOption::Help => {
-                    println!("{}", command.help());
-                }
-                DefaultInformativeOption::Version => {
-                    println!("sample 0.1.0");
-                }
-            };
+        CallType::Informative(_) => {
+            println!("{}", command.help());
             return;
         }
         CallType::Normal(opts, args) => {

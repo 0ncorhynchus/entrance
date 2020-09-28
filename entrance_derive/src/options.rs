@@ -54,6 +54,15 @@ impl OptionsInput {
                 }
             }
         };
+
+        let informative_arms = options.iter().map(|option| {
+            let is_informative = option.is_informative;
+            let option = &option.ident;
+            quote! {
+                Self::#option => #is_informative
+            }
+        });
+
         let idents = options.iter().map(|option| get_long_option(&option.ident));
         let num_options = options.len();
         let descriptions = options.iter().map(|option| &option.description);
@@ -62,6 +71,14 @@ impl OptionsInput {
             impl entrance::Options for #ident {
                 fn parse(option: entrance::OptionItem) -> entrance::Result<Self> {
                     #parse_lines
+                }
+
+                fn is_informative(&self) -> bool {
+                    match self {
+                        #(
+                            #informative_arms,
+                        )*
+                    }
                 }
 
                 fn spec() -> &'static [entrance::Opt] {
@@ -107,6 +124,7 @@ struct OptionVariant {
     ident: syn::Ident,
     short: Option<char>,
     description: String,
+    is_informative: bool,
 }
 impl Parse for OptionVariant {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -118,10 +136,23 @@ impl Parse for OptionVariant {
         let short = get_short_attribute(&name_value_attrs)?;
         let description = get_description(&name_value_attrs);
 
+        let is_informative = variant
+            .attrs
+            .iter()
+            .filter_map(|attr| attr.parse_meta().ok())
+            .any(|meta| {
+                if let syn::Meta::Word(ident) = meta {
+                    ident == "informative"
+                } else {
+                    false
+                }
+            });
+
         Ok(Self {
             ident,
             short,
             description,
+            is_informative,
         })
     }
 }
