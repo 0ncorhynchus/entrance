@@ -13,22 +13,16 @@ Simple usage
 ------------
 
 ```rust
-use entrance::*;
 use std::env::args;
 
-type Command = entrance::Command<DefaultInformativeOption, (), ()>;
+type Command = entrance::Command<(), ()>;
 
 fn main() {
     let command = Command::new(env!("CARGO_PKG_NAME"));
 
     match command.parse(args()).unwrap() {
-        CallType::Informative(info_opt) => match info_opt {
-            DefaultInformativeOption::Help => {
-                println!("{}", command.help());
-            }
-            DefaultInformativeOption::Version => {
-                println!("{} {}", command.name(), env!("CARGO_PKG_VERSION"));
-            }
+        CallType::Informative(_) => {
+            println!("{}", command.help());
         },
         _ => {}
     }
@@ -44,12 +38,6 @@ This struct provides tools for parsing command line arguments.
 
 Before parsing command line arguments, it is necessary to create the instance
 with the associated function `new` then, call `parse` of the instance.
-
-### InformativeOption
-
-A derive macro is available for this.
-
-Limitation: the macro supports only the enum with unit variants.
 
 ### Options
 
