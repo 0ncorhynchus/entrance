@@ -13,7 +13,7 @@ pub fn args_derive(tokens: TokenStream) -> TokenStream {
     input.gen()
 }
 
-#[proc_macro_derive(Options, attributes(description, short))]
+#[proc_macro_derive(Options, attributes(description, short, informative))]
 pub fn options_derive(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as options::OptionsInput);
     input.gen()
@@ -22,7 +22,7 @@ pub fn options_derive(tokens: TokenStream) -> TokenStream {
 fn extract_name_values(attrs: &[syn::Attribute]) -> Vec<syn::MetaNameValue> {
     attrs
         .iter()
-        .filter_map(syn::Attribute::interpret_meta)
+        .filter_map(|attr| attr.parse_meta().ok())
         .filter_map(|meta| {
             if let syn::Meta::NameValue(name_value) = meta {
                 Some(name_value)

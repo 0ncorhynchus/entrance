@@ -23,38 +23,27 @@ fn struct_with_named_fields() -> entrance::Result<()> {
 #[test]
 fn options() -> Result<(), entrance::Error> {
     #[derive(Options, Debug, PartialEq)]
-    struct Opts {
-        verbose: bool,
-        version: bool,
-        help: bool,
+    enum Opts {
+        Verbose,
+        Version,
+        Help,
     }
 
-    let options = vec![
-        OptionItem::Long("help".to_string()),
-        OptionItem::Long("verbose".to_string()),
-    ];
-    let opts = Opts::parse(options.into_iter())?;
+    let option = Opts::parse(OptionItem::Long("verbose".to_string()))?;
+    assert_eq!(option, Opts::Verbose);
 
-    assert!(opts.verbose);
-    assert!(!opts.version);
-    assert!(opts.help);
+    let option = Opts::parse(OptionItem::Long("version".to_string()))?;
+    assert_eq!(option, Opts::Version);
 
-    let options = vec![
-        OptionItem::Long("help".to_string()),
-        OptionItem::Long("invalid".to_string()),
-    ];
-    let opts = Opts::parse(options.into_iter());
-    match opts {
-        Ok(_) => {
-            panic!("Err variant is expected.");
-        }
-        Err(error) => match error.kind() {
-            entrance::ErrorKind::InvalidOption => {}
-            _ => {
-                panic!("ErrorKind::InvalidOption is expected.");
-            }
-        },
-    }
+    let option = Opts::parse(OptionItem::Long("help".to_string()))?;
+    assert_eq!(option, Opts::Help);
+
+    let option = Opts::parse(OptionItem::Long("invalid".to_string()));
+    assert!(option.is_err());
+    assert_eq!(
+        option.unwrap_err().kind(),
+        entrance::ErrorKind::InvalidOption
+    );
 
     Ok(())
 }

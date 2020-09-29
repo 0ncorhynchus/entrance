@@ -9,10 +9,15 @@
 //! use std::path::PathBuf;
 //!
 //! #[derive(Options)]
-//! struct Opts {
+//! enum Opts {
+//!     #[description = "Print the help message"]
+//!     #[short = 'h']
+//!     #[informative]
+//!     Help,
+//!
 //!     #[description = "Use verbose output"]
 //!     #[short = 'v']
-//!     verbose: bool,
+//!     Verbose,
 //! }
 //!
 //! #[derive(Arguments)]
@@ -24,19 +29,14 @@
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<DefaultInformativeOption, Opts, Args>::new("program");
+//! let command = Command::<Opts, Args>::new("program");
 //!
 //! match command.parse(args).unwrap() {
-//!     CallType::Informative(info_opt) => match info_opt {
-//!         DefaultInformativeOption::Help => {
-//!             println!("{}", command.help());
-//!         },
-//!         DefaultInformativeOption::Version => {
-//!             // Print version information
-//!         }
+//!     CallType::Informative(_) => {
+//!         println!("{}", command.help());
 //!     },
 //!     CallType::Normal(opts, args) => {
-//!         assert!(opts.verbose);
+//!         assert!(!opts.is_empty());
 //!         assert_eq!(args.path, PathBuf::from("path/to/file"));
 //!     }
 //! }
