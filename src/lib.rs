@@ -49,39 +49,30 @@ mod options;
 
 pub use crate::arguments::*;
 pub use crate::command::*;
-pub use crate::error::*;
+pub use crate::error::EntranceError as Error;
 pub use crate::options::*;
 pub use entrance_derive::*;
 
-use failure::{Fail, ResultExt};
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// A helper function to parse argument
 pub fn parse_argument<T, E>(arg: String) -> Result<T>
 where
     T: std::str::FromStr<Err = E>,
-    E: Fail,
+    E: std::error::Error + 'static,
 {
-    // The below code can't be compiled because of failure in type inference
-    //
-    // ```rust
-    // Ok(arg.parse().context(ErrorKind::ParseError)?)
-    // ```
-    let result: std::result::Result<T, E> = arg.parse();
-    Ok(result.context(ErrorKind::ParseError)?)
+    arg.parse().map_err(|err| Error::ParseError(Box::new(err)))
 }
 
 pub fn parse_variable_argument<T, E, I, V>(args: I) -> Result<V>
 where
     T: std::str::FromStr<Err = E>,
-    E: Fail,
+    E: std::error::Error + 'static,
     I: Iterator<Item = String>,
     V: std::iter::FromIterator<T>,
 {
-    args.map(|arg| {
-        let result: std::result::Result<T, E> = arg.parse();
-        Ok(result.context(ErrorKind::ParseError)?)
-    })
-    .collect()
+    args.map(|arg| arg.parse().map_err(|err| Error::ParseError(Box::new(err))))
+        .collect()
 }
 
 #[cfg(test)]

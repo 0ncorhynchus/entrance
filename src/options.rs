@@ -1,4 +1,4 @@
-use crate::{ErrorKind, Result};
+use crate::{Error, Result};
 
 #[derive(Debug, PartialEq, Eq)]
 #[doc(hidden)]
@@ -39,7 +39,7 @@ pub trait Options: Sized {
 
 impl Options for () {
     fn parse(_: OptionItem) -> Result<Self> {
-        Err(ErrorKind::InvalidOption.into())
+        Err(Error::InvalidOption)
     }
 
     fn is_informative(&self) -> bool {
