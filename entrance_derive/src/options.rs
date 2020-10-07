@@ -38,7 +38,7 @@ impl OptionsInput {
                             #long_option_arms
                         )*
                         _ => {
-                            Err(entrance::ErrorKind::InvalidOption.into())
+                            Err(entrance::Error::InvalidOption)
                         }
                     }
                 }
@@ -48,7 +48,7 @@ impl OptionsInput {
                             #short_option_arms
                         )*
                         _ => {
-                            Err(entrance::ErrorKind::InvalidOption.into())
+                            Err(entrance::Error::InvalidOption)
                         }
                     }
                 }

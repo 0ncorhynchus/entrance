@@ -87,7 +87,11 @@ mod tests {
 
         let parsed: Result<f64> = parse_argument("not float number".to_string());
         assert!(parsed.is_err());
-        assert_eq!(parsed.unwrap_err().kind(), ErrorKind::ParseError);
+        let is_parse_error = match parsed.unwrap_err() {
+            Error::ParseError(_) => true,
+            _ => false,
+        };
+        assert!(is_parse_error);
     }
 
     #[test]
@@ -102,6 +106,10 @@ mod tests {
             .map(String::from);
         let parsed: Result<Vec<f64>> = parse_variable_argument(args);
         assert!(parsed.is_err());
-        assert_eq!(parsed.unwrap_err().kind(), ErrorKind::ParseError);
+        let is_parse_error = match parsed.unwrap_err() {
+            Error::ParseError(_) => true,
+            _ => false,
+        };
+        assert!(is_parse_error);
     }
 }

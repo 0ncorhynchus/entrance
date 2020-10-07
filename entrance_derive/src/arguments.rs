@@ -21,7 +21,7 @@ impl ArgumentsInput {
                     entrance::parse_argument(
                         args
                             .next()
-                            .ok_or(entrance::ErrorKind::InvalidNumberOfArguments)?
+                            .ok_or(entrance::Error::InvalidNumberOfArguments)?
                     )?,
             }
         });
