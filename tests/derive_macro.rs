@@ -1,4 +1,4 @@
-use entrance::{Arguments, OptionItem, Options};
+use entrance::{Arguments, Error, OptionItem, Options};
 use std::path::PathBuf;
 
 #[test]
@@ -40,10 +40,11 @@ fn options() -> Result<(), entrance::Error> {
 
     let option = Opts::parse(OptionItem::Long("invalid".to_string()));
     assert!(option.is_err());
-    assert_eq!(
-        option.unwrap_err().kind(),
-        entrance::ErrorKind::InvalidOption
-    );
+    let is_invalid_option = match option.unwrap_err() {
+        Error::InvalidOption => true,
+        _ => false,
+    };
+    assert!(is_invalid_option);
 
     Ok(())
 }

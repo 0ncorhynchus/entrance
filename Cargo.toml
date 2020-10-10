@@ -15,7 +15,7 @@ license = "MIT"
 circle-ci = { repository = "0ncorhynchus/entrance" }
 
 [dependencies]
-failure = "0.1.5"
+thiserror = "1.0"
 
 [dependencies.entrance_derive]
 optional = true
