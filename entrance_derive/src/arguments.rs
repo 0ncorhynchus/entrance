@@ -157,9 +157,7 @@ impl Parse for ArgumentFields {
             if let Some(meta) = prev_variadic {
                 return Err(syn::Error::new_spanned(
                     meta,
-                    format!(
-                        "The \"variable_argument\" attribute is allowed only for the last field"
-                    ),
+                    "The \"variable_argument\" attribute is allowed only for the last field",
                 ));
             }
 

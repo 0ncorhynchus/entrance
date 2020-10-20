@@ -160,7 +160,7 @@ fn extract_options_attrs(attrs: &[syn::Attribute]) -> OptionAttribute {
 
     OptionAttribute {
         short,
-        description: description.unwrap_or_else(|| String::new()),
+        description: description.unwrap_or_else(String::new),
         is_informative,
     }
 }
