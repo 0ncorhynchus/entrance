@@ -15,10 +15,10 @@ pub struct Arg {
 ///
 /// #[derive(Arguments)]
 /// struct Args {
-///     #[description = "The number of lines"]
+///     #[entrance(description = "The number of lines")]
 ///     num: f64,
 ///
-///     #[description = "Path to a file"]
+///     #[entrance(description = "Path to a file")]
 ///     file: PathBuf,
 /// }
 /// ```

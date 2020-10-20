@@ -1,4 +1,4 @@
-use crate::{extract_name_values, get_description, get_single_attribute};
+use crate::*;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
@@ -120,6 +120,51 @@ impl Parse for OptionsInput {
     }
 }
 
+struct OptionAttribute {
+    short: Option<char>,
+    description: String,
+    is_informative: bool,
+}
+
+fn extract_options_attrs(attrs: &[syn::Attribute]) -> OptionAttribute {
+    let mut short = None;
+    let mut description = None;
+    let mut is_informative = false;
+
+    let attrs = extract_attributes(attrs);
+    for (_meta, attr) in attrs {
+        match attr {
+            Attribute::Description(desc) => {
+                if description.is_some() {
+                    panic!("description attributes are duplicated");
+                }
+                description = Some(desc);
+            }
+            Attribute::Short(c) => {
+                if short.is_some() {
+                    panic!("short attributes are duplicated");
+                }
+                short = Some(c);
+            }
+            Attribute::Informative => {
+                if is_informative {
+                    panic!("is_informative attributes are duplicated");
+                }
+                is_informative = true;
+            }
+            _ => {
+                panic!("Invalid argument is given");
+            }
+        }
+    }
+
+    OptionAttribute {
+        short,
+        description: description.unwrap_or_else(|| String::new()),
+        is_informative,
+    }
+}
+
 struct OptionVariant {
     ident: syn::Ident,
     short: Option<char>,
@@ -131,50 +176,19 @@ impl Parse for OptionVariant {
         let variant = syn::Variant::parse(input)?;
 
         let ident = variant.ident;
-        let name_value_attrs = extract_name_values(&variant.attrs);
-
-        let short = get_short_attribute(&name_value_attrs)?;
-        let description = get_description(&name_value_attrs);
-
-        let is_informative = variant
-            .attrs
-            .iter()
-            .filter_map(|attr| attr.parse_meta().ok())
-            .any(|meta| {
-                if let syn::Meta::Word(ident) = meta {
-                    ident == "informative"
-                } else {
-                    false
-                }
-            });
+        let option_attrs = extract_options_attrs(&variant.attrs);
 
         Ok(Self {
             ident,
-            short,
-            description,
-            is_informative,
+            short: option_attrs.short,
+            description: option_attrs.description,
+            is_informative: option_attrs.is_informative,
         })
     }
 }
 
 fn get_long_option(ident: &syn::Ident) -> String {
     ident.to_string().to_lowercase()
-}
-
-fn get_short_attribute(name_value_attrs: &[syn::MetaNameValue]) -> syn::Result<Option<char>> {
-    match get_single_attribute("short", name_value_attrs) {
-        Some(lit) => {
-            if let syn::Lit::Char(c) = lit {
-                Ok(Some(c.value()))
-            } else {
-                Err(syn::Error::new_spanned(
-                    lit,
-                    "Invalid usage of `short` attribute: expected a char",
-                ))
-            }
-        }
-        None => Ok(None),
-    }
 }
 
 fn option_to_tokens<T: quote::ToTokens>(x: Option<T>) -> impl quote::ToTokens {

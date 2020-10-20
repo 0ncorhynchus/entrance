@@ -10,19 +10,19 @@
 //!
 //! #[derive(Options)]
 //! enum Opts {
-//!     #[description = "Print the help message"]
-//!     #[short = 'h']
-//!     #[informative]
+//!     #[entrance(description = "Print the help message")]
+//!     #[entrance(short = 'h')]
+//!     #[entrance(informative)]
 //!     Help,
 //!
-//!     #[description = "Use verbose output"]
-//!     #[short = 'v']
+//!     #[entrance(description = "Use verbose output")]
+//!     #[entrance(short = 'v')]
 //!     Verbose,
 //! }
 //!
 //! #[derive(Arguments)]
 //! struct Args {
-//!     #[description = "Path to a file"]
+//!     #[entrance(description = "Path to a file")]
 //!     path: PathBuf,
 //! }
 //!

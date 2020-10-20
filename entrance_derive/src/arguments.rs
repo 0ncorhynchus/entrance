@@ -1,4 +1,4 @@
-use crate::{extract_name_values, get_description};
+use crate::*;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
@@ -120,39 +120,67 @@ struct ArgumentFields {
     variable_argument: Option<Field>,
 }
 
+fn extract_arguments_attrs(
+    attrs: &[syn::Attribute],
+) -> (Option<(syn::Meta, String)>, Option<syn::Meta>) {
+    let mut description = None;
+    let mut variadic = None;
+
+    let attrs = extract_attributes(attrs);
+    for (meta, attr) in attrs {
+        match attr {
+            Attribute::Description(desc) => {
+                if description.is_some() {
+                    panic!("description attributes are duplicated");
+                }
+                description = Some((meta, desc));
+            }
+            Attribute::Variadic => {
+                variadic = Some(meta);
+            }
+            _ => {
+                panic!("Invalid argument is given");
+            }
+        }
+    }
+
+    (description, variadic)
+}
+
 impl Parse for ArgumentFields {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let fields: Punctuated<_, Token![,]> = input.parse_terminated(syn::Field::parse_named)?;
         let mut arguments = Vec::new();
-        let mut prev_variable: Option<syn::Attribute> = None;
+        let mut prev_variadic: Option<syn::Meta> = None;
+
+        let fields: Punctuated<_, Token![,]> = input.parse_terminated(syn::Field::parse_named)?;
         for field in fields {
-            if let Some(attr) = prev_variable {
+            if let Some(meta) = prev_variadic {
                 return Err(syn::Error::new_spanned(
-                    attr,
-                    "The \"variable_argument\" attribute is allowed only for the last field",
+                    meta,
+                    format!(
+                        "The \"variable_argument\" attribute is allowed only for the last field"
+                    ),
                 ));
             }
 
-            prev_variable = field
-                .attrs
-                .iter()
-                .find(|attr| {
-                    if let Some(meta) = attr.interpret_meta() {
-                        if let syn::Meta::Word(ident) = meta {
-                            return ident == "variable_argument";
-                        }
-                    }
-                    false
-                })
-                .cloned();
+            let (description, variadic) = extract_arguments_attrs(&field.attrs);
+            if let Some(meta) = variadic {
+                prev_variadic = Some(meta);
+            }
+
+            let description = if let Some((_, description)) = description {
+                description
+            } else {
+                String::new()
+            };
 
             arguments.push(Field {
                 ident: field.ident.unwrap(),
-                description: get_description(&extract_name_values(&field.attrs)),
+                description,
             });
         }
 
-        let variable_argument = if prev_variable.is_some() {
+        let variable_argument = if prev_variadic.is_some() {
             arguments.pop()
         } else {
             None

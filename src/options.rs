@@ -15,13 +15,13 @@ pub enum OptionItem {
 ///
 /// #[derive(Options)]
 /// enum Opts {
-///     #[description = "Print help message"]
-///     #[short = 'h']
-///     #[informative]
+///     #[entrance(description = "Print help message")]
+///     #[entrance(short = 'h')]
+///     #[entrance(informative)]
 ///     Help,
 ///
-///     #[description = "Print version infomation"]
-///     #[informative]
+///     #[entrance(description = "Print version infomation")]
+///     #[entrance(informative)]
 ///     Version,
 /// }
 /// ```

@@ -4,29 +4,29 @@ use std::path::PathBuf;
 
 #[derive(Arguments)]
 struct Args {
-    #[description = "Integer argument (i32)"]
+    #[entrance(description = "Integer argument (i32)")]
     integer: i32,
 
-    #[description = "Float argument   (f64)"]
+    #[entrance(description = "Float argument   (f64)")]
     float: f64,
 
-    #[description = "String argument  (String)"]
+    #[entrance(description = "String argument  (String)")]
     string: String,
 
-    #[description = "File path list   (Vec<PathBuf>)"]
-    #[variable_argument]
+    #[entrance(description = "File path list   (Vec<PathBuf>)")]
+    #[entrance(variable_argument)]
     files: Vec<PathBuf>,
 }
 
 #[derive(Options, PartialEq)]
 enum Opts {
-    #[description = "Print the help message"]
-    #[short = 'h']
-    #[informative]
+    #[entrance(description = "Print the help message")]
+    #[entrance(short = 'h')]
+    #[entrance(informative)]
     Help,
 
-    #[description = "Use verbose output"]
-    #[short = 'v']
+    #[entrance(description = "Use verbose output")]
+    #[entrance(short = 'v')]
     Verbose,
 }
 
