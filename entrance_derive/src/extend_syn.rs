@@ -1,14 +1,14 @@
 use syn::{Ident, Lit, Meta, MetaNameValue};
 
 pub trait ExtMeta {
-    fn word(&self) -> Option<&Ident>;
+    fn ident(&self) -> Option<&Ident>;
     fn name_value(&self) -> Option<&MetaNameValue>;
 }
 
 impl ExtMeta for Meta {
-    fn word(&self) -> Option<&Ident> {
+    fn ident(&self) -> Option<&Ident> {
         match self {
-            Self::Word(ident) => Some(ident),
+            Self::Path(path) => Some(path.get_ident()?),
             _ => None,
         }
     }
