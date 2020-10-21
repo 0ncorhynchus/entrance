@@ -17,11 +17,11 @@ pub enum OptionItem {
 /// enum Opts {
 ///     #[entrance(description = "Print help message")]
 ///     #[entrance(short = 'h')]
-///     #[entrance(informative(Command::help))]
+///     #[entrance(informative(entrance::help))]
 ///     Help,
 ///
 ///     #[entrance(description = "Print version infomation")]
-///     #[entrance(informative(Command::version))]
+///     #[entrance(informative(entrance::version))]
 ///     Version,
 /// }
 /// ```

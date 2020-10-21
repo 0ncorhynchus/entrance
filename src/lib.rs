@@ -12,7 +12,7 @@
 //! enum Opts {
 //!     #[entrance(description = "Print the help message")]
 //!     #[entrance(short = 'h')]
-//!     #[entrance(informative(Command::help))]
+//!     #[entrance(informative(entrance::help))]
 //!     Help,
 //!
 //!     #[entrance(description = "Use verbose output")]
@@ -49,6 +49,20 @@ pub use crate::options::*;
 pub use entrance_derive::*;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+///
+/// A callback function to print help messages
+///
+pub fn help<O: Options, A: Arguments>(command: &Command<O, A>) {
+    println!("{}", command.help_message());
+}
+
+///
+/// A callback function to print the version
+///
+pub fn version<O: Options, A: Arguments>(command: &Command<O, A>) {
+    println!("{} {}", command.name(), command.version());
+}
 
 /// A helper function to parse argument
 pub fn parse_argument<T, E>(arg: String) -> Result<T>

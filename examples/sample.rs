@@ -22,11 +22,11 @@ struct Args {
 enum Opts {
     #[entrance(description = "Print the help message")]
     #[entrance(short = 'h')]
-    #[entrance(informative(entrance::Command::help))]
+    #[entrance(informative(entrance::help))]
     Help,
 
     #[entrance(description = "Use verbose output")]
-    #[entrance(informative(entrance::Command::version))]
+    #[entrance(informative(entrance::version))]
     Version,
 
     #[entrance(description = "Use verbose output")]
@@ -42,6 +42,7 @@ fn main() {
         Ok(args) => args,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
+            eprintln!("{}", command.help_message());
             std::process::exit(1);
         }
     };
