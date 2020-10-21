@@ -23,10 +23,10 @@ pub fn options_derive(tokens: TokenStream) -> TokenStream {
 }
 
 enum Attribute {
-    Description(String), // description
-    Variadic,            // variable_argument
-    Short(char),         // short
-    Informative,         // informative
+    Description(String),    // description
+    Variadic,               // variable_argument
+    Short(char),            // short
+    Informative(syn::Path), // informative
 }
 
 impl TryFrom<&syn::Meta> for Attribute {
@@ -46,8 +46,8 @@ impl TryFrom<&syn::Meta> for Attribute {
                 Ok(Attribute::Short(short))
             }
             "informative" => {
-                meta.ident().ok_or_else(|| ())?;
-                Ok(Attribute::Informative)
+                let path = meta.single_list().ok_or(())?.clone();
+                Ok(Attribute::Informative(path))
             }
             _ => Err(()),
         }

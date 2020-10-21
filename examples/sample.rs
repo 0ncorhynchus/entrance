@@ -22,7 +22,7 @@ struct Args {
 enum Opts {
     #[entrance(description = "Print the help message")]
     #[entrance(short = 'h')]
-    #[entrance(informative)]
+    #[entrance(informative(entrance::Command::help))]
     Help,
 
     #[entrance(description = "Use verbose output")]
@@ -44,7 +44,7 @@ fn main() {
 
     match call_type {
         CallType::Informative(_) => {
-            println!("{}", command.help());
+            command.help();
             return;
         }
         CallType::Normal(opts, args) => {

@@ -54,8 +54,13 @@ where
         &self.name
     }
 
-    pub fn help(&self) -> HelpDisplay<Opts, Args> {
-        HelpDisplay::new(self.name())
+    pub fn help(&self) {
+        let help_message: HelpDisplay<Opts, Args> = HelpDisplay::new(self.name());
+        println!("{}", help_message);
+    }
+
+    pub fn version(&self) {
+        println!("{} 1.0.0", self.name());
     }
 }
 

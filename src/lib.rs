@@ -12,7 +12,7 @@
 //! enum Opts {
 //!     #[entrance(description = "Print the help message")]
 //!     #[entrance(short = 'h')]
-//!     #[entrance(informative)]
+//!     #[entrance(informative(Command::help))]
 //!     Help,
 //!
 //!     #[entrance(description = "Use verbose output")]
@@ -33,7 +33,7 @@
 //!
 //! match command.parse(args).unwrap() {
 //!     CallType::Informative(_) => {
-//!         println!("{}", command.help());
+//!         command.help();
 //!     },
 //!     CallType::Normal(opts, args) => {
 //!         assert!(!opts.is_empty());
