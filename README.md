@@ -18,7 +18,7 @@ use std::env::args;
 type Command = entrance::Command<(), ()>;
 
 fn main() {
-    let command = Command::new(env!("CARGO_PKG_NAME"));
+    let command = Command::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 
     match command.parse(args()).unwrap() {
         CallType::Informative(_) => {

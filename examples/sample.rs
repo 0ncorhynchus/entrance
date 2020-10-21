@@ -33,7 +33,7 @@ enum Opts {
 type Command = entrance::Command<Opts, Args>;
 
 fn main() {
-    let command = Command::new("sample");
+    let command = Command::new("sample", "1.0.0");
     let call_type = match command.parse(env::args()) {
         Ok(call_type) => call_type,
         Err(err) => {

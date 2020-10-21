@@ -29,7 +29,7 @@
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<Opts, Args>::new("program");
+//! let command = Command::<Opts, Args>::new("program", "1.0.0");
 //!
 //! match command.parse(args).unwrap() {
 //!     CallType::Informative(_) => {

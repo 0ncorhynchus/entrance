@@ -13,6 +13,7 @@ pub enum CallType<Opts, Args> {
 #[derive(Debug)]
 pub struct Command<Opts, Args> {
     name: String,
+    version: String,
     _phantom: PhantomData<CallType<Opts, Args>>,
 }
 
@@ -21,9 +22,10 @@ where
     Opts: Options,
     Args: Arguments,
 {
-    pub fn new(name: &str) -> Self {
+    pub fn new(name: &str, version: &str) -> Self {
         Self {
             name: name.to_string(),
+            version: version.to_string(),
             _phantom: PhantomData,
         }
     }
@@ -55,12 +57,12 @@ where
     }
 
     pub fn help(&self) {
-        let help_message: HelpDisplay<Opts, Args> = HelpDisplay::new(self.name());
+        let help_message: HelpDisplay<Opts, Args> = HelpDisplay::new(self);
         println!("{}", help_message);
     }
 
     pub fn version(&self) {
-        println!("{} 1.0.0", self.name());
+        println!("{} {}", self.name, self.version);
     }
 }
 
@@ -89,11 +91,11 @@ fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<Optio
 
 /// Helper struct for printing help messages with `format!` and `{}`.
 #[derive(Debug)]
-pub struct HelpDisplay<'a, Opts, Args>(&'a str, PhantomData<(Opts, Args)>);
+pub struct HelpDisplay<'a, Opts, Args>(&'a Command<Opts, Args>);
 
 impl<'a, Opts, Args> HelpDisplay<'a, Opts, Args> {
-    fn new(name: &'a str) -> Self {
-        Self(name, PhantomData)
+    fn new(command: &'a Command<Opts, Args>) -> Self {
+        Self(command)
     }
 }
 
@@ -106,7 +108,7 @@ where
         const SPACER: &str = "    ";
 
         writeln!(f, "USAGE:")?;
-        write!(f, "{indent}{}", self.0, indent = SPACER)?;
+        write!(f, "{indent}{}", self.0.name, indent = SPACER)?;
         if !Opts::spec().is_empty() {
             write!(f, " [OPTIONS]")?;
         }
@@ -231,7 +233,7 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<(), Args> = Command::new("sample");
+        let command: Command<(), Args> = Command::new("sample", "1.0.0");
 
         let args = match command.parse(args.iter().map(|s| s.to_string()))? {
             CallType::Normal(_opts, args) => args,
@@ -247,7 +249,8 @@ mod tests {
 
     #[test]
     fn format_usage() {
-        let usage = HelpDisplay::<(), Args>::new("sample");
+        let command: Command<(), Args> = Command::new("sample", "1.0.0");
+        let usage = HelpDisplay::new(&command);
         assert_eq!(
             usage.to_string(),
             "\
