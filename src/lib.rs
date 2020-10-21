@@ -31,15 +31,10 @@
 //! // Parse only options to exit immediately with "--version" or "--help".
 //! let command = Command::<Opts, Args>::new("program", "1.0.0");
 //!
-//! match command.parse(args).unwrap() {
-//!     CallType::Informative(_) => {
-//!         command.help();
-//!     },
-//!     CallType::Normal(opts, args) => {
-//!         assert!(!opts.is_empty());
-//!         assert_eq!(args.path, PathBuf::from("path/to/file"));
-//!     }
-//! }
+//! let (opts, args) = command.parse(args).unwrap();
+//! assert!(!opts.is_empty());
+//! assert_eq!(args.path, PathBuf::from("path/to/file"));
+//!
 //! ```
 
 mod arguments;

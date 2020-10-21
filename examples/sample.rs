@@ -26,6 +26,10 @@ enum Opts {
     Help,
 
     #[entrance(description = "Use verbose output")]
+    #[entrance(informative(entrance::Command::version))]
+    Version,
+
+    #[entrance(description = "Use verbose output")]
     #[entrance(short = 'v')]
     Verbose,
 }
@@ -33,31 +37,24 @@ enum Opts {
 type Command = entrance::Command<Opts, Args>;
 
 fn main() {
-    let command = Command::new("sample", "1.0.0");
-    let call_type = match command.parse(env::args()) {
-        Ok(call_type) => call_type,
+    let command = Command::new("sample", env!("CARGO_PKG_VERSION"));
+    let (opts, args) = match command.parse(env::args()) {
+        Ok(args) => args,
         Err(err) => {
             eprintln!("\x1b[31merror:\x1b[m {}", err);
             std::process::exit(1);
         }
     };
 
-    match call_type {
-        CallType::Informative(_) => {
-            command.help();
-            return;
-        }
-        CallType::Normal(opts, args) => {
-            if opts.contains(&Opts::Verbose) {
-                println!("--verbose");
-            }
-            println!("integer: {}", args.integer);
-            println!("float:   {}", args.float);
-            println!("string:  {}", args.string);
-            println!("paths:");
-            for path in &args.files {
-                println!("    {}", path.display());
-            }
-        }
+    if opts.contains(&Opts::Verbose) {
+        println!("--verbose");
+    }
+
+    println!("integer: {}", args.integer);
+    println!("float:   {}", args.float);
+    println!("string:  {}", args.string);
+    println!("paths:");
+    for path in &args.files {
+        println!("    {}", path.display());
     }
 }
