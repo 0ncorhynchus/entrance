@@ -1,14 +1,27 @@
-use syn::{Ident, Lit, Meta, MetaNameValue};
+use syn::{Ident, Lit, Meta, MetaNameValue, NestedMeta, Path};
 
 pub trait ExtMeta {
-    fn word(&self) -> Option<&Ident>;
+    fn ident(&self) -> Option<&Ident>;
+    fn get_path(&self) -> Option<&Path>;
+    fn single_list(&self) -> Option<&Path>;
     fn name_value(&self) -> Option<&MetaNameValue>;
 }
 
 impl ExtMeta for Meta {
-    fn word(&self) -> Option<&Ident> {
+    fn ident(&self) -> Option<&Ident> {
+        Some(self.get_path()?.get_ident()?)
+    }
+
+    fn get_path(&self) -> Option<&Path> {
         match self {
-            Self::Word(ident) => Some(ident),
+            Self::Path(path) => Some(path),
+            _ => None,
+        }
+    }
+
+    fn single_list(&self) -> Option<&Path> {
+        match self {
+            Self::List(list) => list.nested.iter().single()?.meta()?.get_path(),
             _ => None,
         }
     }
@@ -38,6 +51,39 @@ impl ExtLit for Lit {
         match self {
             Self::Str(lit) => Some(lit.value()),
             _ => None,
+        }
+    }
+}
+
+pub trait ExtNestedMeta {
+    fn meta(&self) -> Option<&Meta>;
+}
+
+impl ExtNestedMeta for NestedMeta {
+    fn meta(&self) -> Option<&Meta> {
+        match self {
+            Self::Meta(meta) => Some(meta),
+            _ => None,
+        }
+    }
+}
+
+trait Single {
+    type Item;
+    fn single(self) -> Option<Self::Item>;
+}
+
+impl<I> Single for I
+where
+    I: Iterator,
+{
+    type Item = I::Item;
+    fn single(mut self) -> Option<Self::Item> {
+        let item = self.next()?;
+        if self.next().is_none() {
+            Some(item)
+        } else {
+            None
         }
     }
 }

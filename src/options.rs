@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{Arguments, Command, Error, Result};
 
 #[derive(Debug, PartialEq, Eq)]
 #[doc(hidden)]
@@ -11,17 +11,17 @@ pub enum OptionItem {
 ///
 /// # Example
 /// ```
-/// use entrance::Options;
+/// use entrance::{Command, Options};
 ///
 /// #[derive(Options)]
 /// enum Opts {
 ///     #[entrance(description = "Print help message")]
 ///     #[entrance(short = 'h')]
-///     #[entrance(informative)]
+///     #[entrance(informative(entrance::help))]
 ///     Help,
 ///
 ///     #[entrance(description = "Print version infomation")]
-///     #[entrance(informative)]
+///     #[entrance(informative(entrance::version))]
 ///     Version,
 /// }
 /// ```
@@ -33,6 +33,8 @@ pub trait Options: Sized {
 
     fn is_informative(&self) -> bool;
 
+    fn trigger_informative<Args: Arguments>(&self, command: &Command<Self, Args>);
+
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
 }
@@ -43,6 +45,10 @@ impl Options for () {
     }
 
     fn is_informative(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn trigger_informative<Args: Arguments>(&self, _: &Command<Self, Args>) {
         unimplemented!()
     }
 

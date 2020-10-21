@@ -23,22 +23,22 @@ pub fn options_derive(tokens: TokenStream) -> TokenStream {
 }
 
 enum Attribute {
-    Description(String), // description
-    Variadic,            // variable_argument
-    Short(char),         // short
-    Informative,         // informative
+    Description(String),    // description
+    Variadic,               // variable_argument
+    Short(char),            // short
+    Informative(syn::Path), // informative
 }
 
 impl TryFrom<&syn::Meta> for Attribute {
     type Error = ();
     fn try_from(meta: &syn::Meta) -> Result<Self, Self::Error> {
-        match meta.name().to_string().as_str() {
+        match meta.path().get_ident().unwrap().to_string().as_str() {
             "description" => {
                 let desc = meta.name_value().ok_or(())?.lit.str().ok_or(())?;
                 Ok(Attribute::Description(desc))
             }
             "variable_argument" => {
-                meta.word().ok_or(())?;
+                meta.ident().ok_or(())?;
                 Ok(Attribute::Variadic)
             }
             "short" => {
@@ -46,8 +46,8 @@ impl TryFrom<&syn::Meta> for Attribute {
                 Ok(Attribute::Short(short))
             }
             "informative" => {
-                meta.word().ok_or_else(|| ())?;
-                Ok(Attribute::Informative)
+                let path = meta.single_list().ok_or(())?.clone();
+                Ok(Attribute::Informative(path))
             }
             _ => Err(()),
         }

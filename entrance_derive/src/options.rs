@@ -56,10 +56,23 @@ impl OptionsInput {
         };
 
         let informative_arms = options.iter().map(|option| {
-            let is_informative = option.is_informative;
+            let is_informative = option.informative.is_some();
             let option = &option.ident;
             quote! {
                 Self::#option => #is_informative
+            }
+        });
+
+        let trigger_arms = options.iter().map(|opt| {
+            let option = &opt.ident;
+            if let Some(path) = &opt.informative {
+                quote! {
+                    Self::#option => #path(command),
+                }
+            } else {
+                quote! {
+                    Self::#option => {}
+                }
             }
         });
 
@@ -77,6 +90,17 @@ impl OptionsInput {
                     match self {
                         #(
                             #informative_arms,
+                        )*
+                    }
+                }
+
+                fn trigger_informative<Args>(&self, command: &entrance::Command<Self, Args>)
+                where
+                    Args: entrance::Arguments
+                {
+                    match self {
+                        #(
+                            #trigger_arms
                         )*
                     }
                 }
@@ -123,13 +147,13 @@ impl Parse for OptionsInput {
 struct OptionAttribute {
     short: Option<char>,
     description: String,
-    is_informative: bool,
+    informative: Option<syn::Path>,
 }
 
 fn extract_options_attrs(attrs: &[syn::Attribute]) -> OptionAttribute {
     let mut short = None;
     let mut description = None;
-    let mut is_informative = false;
+    let mut informative = None;
 
     let attrs = extract_attributes(attrs);
     for (_meta, attr) in attrs {
@@ -146,11 +170,11 @@ fn extract_options_attrs(attrs: &[syn::Attribute]) -> OptionAttribute {
                 }
                 short = Some(c);
             }
-            Attribute::Informative => {
-                if is_informative {
-                    panic!("is_informative attributes are duplicated");
+            Attribute::Informative(path) => {
+                if informative.is_some() {
+                    panic!("informative attributes are duplicated");
                 }
-                is_informative = true;
+                informative = Some(path);
             }
             _ => {
                 panic!("Invalid argument is given");
@@ -161,7 +185,7 @@ fn extract_options_attrs(attrs: &[syn::Attribute]) -> OptionAttribute {
     OptionAttribute {
         short,
         description: description.unwrap_or_else(String::new),
-        is_informative,
+        informative,
     }
 }
 
@@ -169,7 +193,7 @@ struct OptionVariant {
     ident: syn::Ident,
     short: Option<char>,
     description: String,
-    is_informative: bool,
+    informative: Option<syn::Path>,
 }
 impl Parse for OptionVariant {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -182,7 +206,7 @@ impl Parse for OptionVariant {
             ident,
             short: option_attrs.short,
             description: option_attrs.description,
-            is_informative: option_attrs.is_informative,
+            informative: option_attrs.informative,
         })
     }
 }

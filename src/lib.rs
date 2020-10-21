@@ -12,7 +12,7 @@
 //! enum Opts {
 //!     #[entrance(description = "Print the help message")]
 //!     #[entrance(short = 'h')]
-//!     #[entrance(informative)]
+//!     #[entrance(informative(entrance::help))]
 //!     Help,
 //!
 //!     #[entrance(description = "Use verbose output")]
@@ -29,17 +29,12 @@
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<Opts, Args>::new("program");
+//! let command = Command::<Opts, Args>::new("program", "1.0.0");
 //!
-//! match command.parse(args).unwrap() {
-//!     CallType::Informative(_) => {
-//!         println!("{}", command.help());
-//!     },
-//!     CallType::Normal(opts, args) => {
-//!         assert!(!opts.is_empty());
-//!         assert_eq!(args.path, PathBuf::from("path/to/file"));
-//!     }
-//! }
+//! let (opts, args) = command.parse(args).unwrap();
+//! assert!(!opts.is_empty());
+//! assert_eq!(args.path, PathBuf::from("path/to/file"));
+//!
 //! ```
 
 mod arguments;
@@ -54,6 +49,20 @@ pub use crate::options::*;
 pub use entrance_derive::*;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+///
+/// A callback function to print help messages
+///
+pub fn help<O: Options, A: Arguments>(command: &Command<O, A>) {
+    println!("{}", command.help_message());
+}
+
+///
+/// A callback function to print the version
+///
+pub fn version<O: Options, A: Arguments>(command: &Command<O, A>) {
+    println!("{} {}", command.name(), command.version());
+}
 
 /// A helper function to parse argument
 pub fn parse_argument<T, E>(arg: String) -> Result<T>
