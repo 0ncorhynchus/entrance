@@ -46,6 +46,17 @@ where
         Ok((opts?, Args::parse(&mut args)?))
     }
 
+    pub fn parse_or_exit<I: Iterator<Item = String>>(&self, args: I) -> (Vec<Opts>, Args) {
+        match self.parse(args) {
+            Ok(retval) => retval,
+            Err(err) => {
+                eprintln!("\x1b[31mError:\x1b[m {}", err);
+                eprintln!("{}", self.help_message());
+                std::process::exit(1);
+            }
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }

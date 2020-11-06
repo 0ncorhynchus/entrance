@@ -38,14 +38,7 @@ type Command = entrance::Command<Opts, Args>;
 
 fn main() {
     let command = Command::new("sample", env!("CARGO_PKG_VERSION"));
-    let (opts, args) = match command.parse(env::args()) {
-        Ok(args) => args,
-        Err(err) => {
-            eprintln!("\x1b[31merror:\x1b[m {}", err);
-            eprintln!("{}", command.help_message());
-            std::process::exit(1);
-        }
-    };
+    let (opts, args) = command.parse_or_exit(env::args());
 
     if opts.contains(&Opts::Verbose) {
         println!("--verbose");
