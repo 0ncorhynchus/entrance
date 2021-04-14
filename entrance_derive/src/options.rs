@@ -67,7 +67,7 @@ impl OptionsInput {
             let option = &opt.ident;
             if let Some(path) = &opt.informative {
                 quote! {
-                    Self::#option => #path(command),
+                    Self::#option => #path(info),
                 }
             } else {
                 quote! {
@@ -94,10 +94,7 @@ impl OptionsInput {
                     }
                 }
 
-                fn trigger_informative<Args>(&self, command: &entrance::Command<Self, Args>)
-                where
-                    Args: entrance::Arguments
-                {
+                fn trigger_informative<C: entrance::Command>(&self, info: &entrance::CommandInfo<C>) {
                     match self {
                         #(
                             #trigger_arms

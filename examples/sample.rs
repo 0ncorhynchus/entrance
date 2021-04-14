@@ -34,21 +34,30 @@ enum Opts {
     Verbose,
 }
 
-type Command = entrance::Command<Opts, Args>;
+struct MyCommand;
+
+impl Command for MyCommand {
+    type Opts = Opts;
+    type Args = Args;
+
+    fn exec(_info: &CommandInfo<Self>, opts: Vec<Opts>, args: Args) {
+        if opts.contains(&Opts::Verbose) {
+            println!("--verbose");
+        }
+
+        println!("integer: {}", args.integer);
+        println!("float:   {}", args.float);
+        println!("string:  {}", args.string);
+        println!("paths:");
+        for path in &args.files {
+            println!("    {}", path.display());
+        }
+    }
+}
 
 fn main() {
-    let command = Command::new("sample", env!("CARGO_PKG_VERSION"));
-    let (opts, args) = command.parse_or_exit(env::args());
-
-    if opts.contains(&Opts::Verbose) {
-        println!("--verbose");
-    }
-
-    println!("integer: {}", args.integer);
-    println!("float:   {}", args.float);
-    println!("string:  {}", args.string);
-    println!("paths:");
-    for path in &args.files {
-        println!("    {}", path.display());
-    }
+    MyCommand::build("sample", env!("CARGO_PKG_VERSION"))
+        .parse(env::args())
+        .expect("Failed to parse command line arguments")
+        .exec();
 }

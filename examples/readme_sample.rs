@@ -1,4 +1,4 @@
-use entrance::{Arguments, Options};
+use entrance::*;
 use std::env;
 use std::path::PathBuf;
 
@@ -27,16 +27,25 @@ struct Args {
     file: PathBuf,
 }
 
-type Command = entrance::Command<Opts, Args>;
+struct MyCommand;
+
+impl Command for MyCommand {
+    type Opts = Opts;
+    type Args = Args;
+
+    fn exec(_info: &CommandInfo<Self>, opts: Vec<Self::Opts>, args: Self::Args) {
+        if opts.contains(&Opts::Verbose) {
+            println!("enabled the verbose output");
+        }
+
+        println!("1st argument: \"{}\"", args.num);
+        println!("2nd argument: \"{}\"", args.file.display());
+    }
+}
 
 fn main() {
-    let command = Command::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-    let (opts, args) = command.parse_or_exit(env::args());
-
-    if opts.contains(&Opts::Verbose) {
-        println!("enabled the verbose output");
-    }
-
-    println!("1st argument: \"{}\"", args.num);
-    println!("2nd argument: \"{}\"", args.file.display());
+    MyCommand::build("sample", env!("CARGO_PKG_VERSION"))
+        .parse(env::args())
+        .expect("Failed to parse command line arguments")
+        .exec();
 }

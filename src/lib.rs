@@ -26,15 +26,25 @@
 //!     path: PathBuf,
 //! }
 //!
+//! struct MyCommand;
+//!
+//! impl Command for MyCommand {
+//!     type Opts= Opts;
+//!     type Args = Args;
+//!
+//!     fn exec(_: &CommandInfo<Self>, opts: Vec<Opts>, args: Args) {
+//!         assert!(!opts.is_empty());
+//!         assert_eq!(args.path, PathBuf::from("path/to/file"));
+//!     }
+//! }
+//!
 //! let args = ["program", "-v", "path/to/file"].iter().map(|s| s.to_string());
 //!
 //! // Parse only options to exit immediately with "--version" or "--help".
-//! let command = Command::<Opts, Args>::new("program", "1.0.0");
-//!
-//! let (opts, args) = command.parse(args).unwrap();
-//! assert!(!opts.is_empty());
-//! assert_eq!(args.path, PathBuf::from("path/to/file"));
-//!
+//! MyCommand::build("program", "1.0.0")
+//!     .parse(args)
+//!     .expect("Failed to parse command line arguments")
+//!     .exec();
 //! ```
 
 mod arguments;
@@ -53,15 +63,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 ///
 /// A callback function to print help messages
 ///
-pub fn help<O: Options, A: Arguments>(command: &Command<O, A>) {
-    println!("{}", command.help_message());
+pub fn help<C: Command>(info: &CommandInfo<C>) {
+    println!("{}", HelpDisplay::new(info));
 }
 
 ///
 /// A callback function to print the version
 ///
-pub fn version<O: Options, A: Arguments>(command: &Command<O, A>) {
-    println!("{} {}", command.name(), command.version());
+pub fn version<C: Command>(info: &CommandInfo<C>) {
+    println!("{} {}", &info.name, &info.version);
 }
 
 /// A helper function to parse argument

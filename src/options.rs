@@ -1,4 +1,4 @@
-use crate::{Arguments, Command, Error, Result};
+use crate::{Command, CommandInfo, Error, Result};
 
 #[derive(Debug, PartialEq, Eq)]
 #[doc(hidden)]
@@ -33,7 +33,7 @@ pub trait Options: Sized {
 
     fn is_informative(&self) -> bool;
 
-    fn trigger_informative<Args: Arguments>(&self, command: &Command<Self, Args>);
+    fn trigger_informative<C: Command>(&self, info: &CommandInfo<C>);
 
     /// This associated function is for `HelpDisplay`.
     fn spec() -> &'static [Opt];
@@ -48,7 +48,7 @@ impl Options for () {
         unimplemented!()
     }
 
-    fn trigger_informative<Args: Arguments>(&self, _: &Command<Self, Args>) {
+    fn trigger_informative<C: Command>(&self, _: &CommandInfo<C>) {
         unimplemented!()
     }
 

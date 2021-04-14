@@ -3,19 +3,27 @@ use crate::{Arguments, OptionItem, Options};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 
-/// Helper struct for parsing command line arguments.
-#[derive(Debug)]
-pub struct Command<Opts, Args> {
-    name: String,
-    version: String,
-    _phantom: PhantomData<(Opts, Args)>,
+pub trait Command: Sized {
+    type Opts: Options;
+    type Args: Arguments;
+
+    fn exec(info: &CommandInfo<Self>, opts: Vec<Self::Opts>, args: Self::Args);
+
+    fn build(name: &str, version: &str) -> CommandParser<Self> {
+        CommandParser {
+            info: CommandInfo::new(name, version),
+        }
+    }
 }
 
-impl<Opts, Args> Command<Opts, Args>
-where
-    Opts: Options,
-    Args: Arguments,
-{
+#[derive(Clone, Debug)]
+pub struct CommandInfo<C> {
+    pub name: String,
+    pub version: String,
+    _phantom: PhantomData<C>,
+}
+
+impl<C> CommandInfo<C> {
     pub fn new(name: &str, version: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -23,50 +31,69 @@ where
             _phantom: PhantomData,
         }
     }
+}
 
-    pub fn parse<I: Iterator<Item = String>>(&self, args: I) -> Result<(Vec<Opts>, Args)> {
+#[derive(Debug)]
+pub struct CommandParser<C> {
+    info: CommandInfo<C>,
+}
+
+impl<C> CommandParser<C> {
+    pub fn new(name: &str, version: &str) -> Self {
+        Self {
+            info: CommandInfo::new(name, version),
+        }
+    }
+
+    pub fn parse<I: Iterator<Item = String>>(self, args: I) -> Result<Call<C>>
+    where
+        C: Command,
+    {
         // Skip the first element (= program_name)
         let mut args = args.skip(1).peekable();
         let options = take_options(&mut args);
 
-        let opts: Vec<_> = options.into_iter().map(Opts::parse).collect();
-
-        // If opts contains any informative option, trigger the callback function and exit
-        // immediately.
-        for opt in &opts {
+        let mut opts = Vec::new();
+        for opt in options {
+            let opt = C::Opts::parse(opt);
             if let Ok(opt) = opt {
                 if opt.is_informative() {
-                    opt.trigger_informative(self);
-                    std::process::exit(0);
+                    return Ok(Call::new(self.info, CallKind::Informative(opt)));
                 }
+                opts.push(Ok(opt));
+            } else {
+                opts.push(opt);
             }
         }
 
         let opts: Result<Vec<_>> = opts.into_iter().collect();
-        Ok((opts?, Args::parse(&mut args)?))
+        Ok(Call::new(
+            self.info,
+            CallKind::Call((opts?, C::Args::parse(&mut args)?)),
+        ))
+    }
+}
+
+pub enum CallKind<C: Command> {
+    Informative(C::Opts),
+    Call((Vec<C::Opts>, C::Args)),
+}
+
+pub struct Call<C: Command> {
+    info: CommandInfo<C>,
+    kind: CallKind<C>,
+}
+
+impl<C: Command> Call<C> {
+    pub fn new(info: CommandInfo<C>, kind: CallKind<C>) -> Self {
+        Self { info, kind }
     }
 
-    pub fn parse_or_exit<I: Iterator<Item = String>>(&self, args: I) -> (Vec<Opts>, Args) {
-        match self.parse(args) {
-            Ok(retval) => retval,
-            Err(err) => {
-                eprintln!("\x1b[31mError:\x1b[m {}", err);
-                eprintln!("{}", self.help_message());
-                std::process::exit(1);
-            }
+    pub fn exec(self) {
+        match self.kind {
+            CallKind::Informative(opt) => opt.trigger_informative(&self.info),
+            CallKind::Call((opts, args)) => C::exec(&self.info, opts, args),
         }
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn version(&self) -> &str {
-        &self.version
-    }
-
-    pub fn help_message(&self) -> HelpDisplay<Opts, Args> {
-        HelpDisplay::new(self)
     }
 }
 
@@ -95,39 +122,35 @@ fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<Optio
 
 /// Helper struct for printing help messages with `format!` and `{}`.
 #[derive(Debug)]
-pub struct HelpDisplay<'a, Opts, Args>(&'a Command<Opts, Args>);
+pub struct HelpDisplay<'a, C>(&'a CommandInfo<C>);
 
-impl<'a, Opts, Args> HelpDisplay<'a, Opts, Args> {
-    fn new(command: &'a Command<Opts, Args>) -> Self {
-        Self(command)
+impl<'a, C> HelpDisplay<'a, C> {
+    pub fn new(info: &'a CommandInfo<C>) -> Self {
+        Self(info)
     }
 }
 
-impl<'a, Opts, Args> std::fmt::Display for HelpDisplay<'a, Opts, Args>
-where
-    Opts: Options,
-    Args: Arguments,
-{
+impl<'a, C: Command> std::fmt::Display for HelpDisplay<'a, C> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         const SPACER: &str = "    ";
 
         writeln!(f, "USAGE:")?;
         write!(f, "{indent}{}", self.0.name, indent = SPACER)?;
-        if !Opts::spec().is_empty() {
+        if !C::Opts::spec().is_empty() {
             write!(f, " [OPTIONS]")?;
         }
-        for arg in Args::spec() {
+        for arg in C::Args::spec() {
             write!(f, " <{}>", arg.name)?;
         }
-        if let Some(args) = Args::var_spec() {
+        if let Some(args) = C::Args::var_spec() {
             write!(f, " [{}]...", args.name)?;
         }
         writeln!(f)?;
 
-        format_options(f, SPACER, Opts::spec())?;
+        format_options(f, SPACER, C::Opts::spec())?;
 
-        let var_args_spec = Args::var_spec();
-        if let Some(longest_length) = Args::spec()
+        let var_args_spec = C::Args::var_spec();
+        if let Some(longest_length) = C::Args::spec()
             .iter()
             .chain(&var_args_spec)
             .map(|arg| arg.name.len())
@@ -135,7 +158,7 @@ where
         {
             writeln!(f)?;
             writeln!(f, "ARGS:")?;
-            for arg in Args::spec().iter().chain(&var_args_spec) {
+            for arg in C::Args::spec().iter().chain(&var_args_spec) {
                 writeln!(
                     f,
                     "{spacer}{:<width$}{spacer}{}",
@@ -237,21 +260,37 @@ mod tests {
     #[test]
     fn command() -> Result<()> {
         let args = ["sample", "arg1", "123", "path/to/file"];
-        let command: Command<(), Args> = Command::new("sample", "1.0.0");
+        struct MyCommand;
+        impl Command for MyCommand {
+            type Opts = ();
+            type Args = Args;
 
-        let (_, args) = command.parse(args.iter().map(|s| s.to_string()))?;
+            fn exec(_info: &CommandInfo<Self>, _opts: Vec<()>, args: Args) {
+                assert_eq!(args.arg1, "arg1".to_string());
+                assert_eq!(args.arg2, 123);
+                assert_eq!(args.arg3, "path/to/file".parse::<PathBuf>().unwrap());
+            }
+        }
 
-        assert_eq!(args.arg1, "arg1".to_string());
-        assert_eq!(args.arg2, 123);
-        assert_eq!(args.arg3, "path/to/file".parse::<PathBuf>().unwrap());
+        MyCommand::build("sample", "1.0.0")
+            .parse(args.iter().map(|s| s.to_string()))?
+            .exec();
 
         Ok(())
     }
 
     #[test]
     fn format_usage() {
-        let command: Command<(), Args> = Command::new("sample", "1.0.0");
-        let usage = HelpDisplay::new(&command);
+        struct MyCommand;
+        impl Command for MyCommand {
+            type Opts = ();
+            type Args = Args;
+
+            fn exec(_info: &CommandInfo<Self>, _opts: Vec<()>, _args: Args) {}
+        }
+
+        let info = CommandInfo::<MyCommand>::new("sample", "1.0.0");
+        let usage = HelpDisplay::new(&info);
         assert_eq!(
             usage.to_string(),
             "\
