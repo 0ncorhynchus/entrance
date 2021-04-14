@@ -100,16 +100,16 @@ impl<C: Command> Call<C> {
 fn take_options<I: Iterator<Item = String>>(args: &mut Peekable<I>) -> Vec<OptionItem> {
     let mut options = Vec::new();
     while let Some(arg) = args.peek() {
-        if arg.starts_with("--") {
-            if arg.len() == 2 {
+        if let Some(opt) = arg.strip_prefix("--") {
+            if opt.is_empty() {
                 break;
             }
-            options.push(OptionItem::Long(arg[2..].to_string()));
-        } else if arg.starts_with('-') {
-            if arg.len() == 1 {
+            options.push(OptionItem::Long(opt.to_string()));
+        } else if let Some(opts) = arg.strip_prefix("-") {
+            if opts.is_empty() {
                 break;
             }
-            for c in arg[1..].chars() {
+            for c in opts.chars() {
                 options.push(OptionItem::Short(c));
             }
         } else {

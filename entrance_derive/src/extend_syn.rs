@@ -9,7 +9,7 @@ pub trait ExtMeta {
 
 impl ExtMeta for Meta {
     fn ident(&self) -> Option<&Ident> {
-        Some(self.get_path()?.get_ident()?)
+        self.get_path()?.get_ident()
     }
 
     fn get_path(&self) -> Option<&Path> {
