@@ -48,7 +48,7 @@ impl Command for MyCommand {
     type Opts = Opts;
     type Args = Args;
 
-    fn exec(_info: &CommandInfo<Self>, opts: Vec<Self::Opts>, args: Self::Args) {
+    fn exec(_info: &CommandInfo<Self>, opts: Vec<Opts>, args: Args) {
         if opts.contains(&Opts::Verbose) {
             println!("enabled the verbose output");
         }
